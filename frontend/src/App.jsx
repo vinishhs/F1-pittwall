@@ -90,11 +90,11 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative">
         {/* Navigation / Header */}
-        <header className="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900/50 backdrop-blur z-20">
+        <header className="pt-6 pb-4 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900/50 backdrop-blur z-20">
           <div className="flex items-center gap-6">
             <div className="flex items-center">
               <Activity className="w-6 h-6 text-brand-red mr-3" />
-              <h1 className="text-xl font-bold tracking-wide">VIRTUAL PIT WALL <span className="text-xs text-slate-500 font-normal ml-2">PHASE 6</span></h1>
+              <h1 className="text-xl font-bold tracking-wide">VIRTUAL PIT WALL <span className="text-xs text-slate-500 font-normal ml-2">PHASE 6.5</span></h1>
             </div>
 
             {/* Navigation Tabs */}
@@ -172,30 +172,49 @@ export default function App() {
                       <TrackMap data={telemetryData} hoverIndex={hoverIndex} />
                     </div>
 
-                    {/* Stats Card */}
-                    <div className="h-48 bg-slate-900 rounded-lg border border-slate-800 p-4 shadow-xl flex flex-col justify-between">
-                      <div className="flex items-center gap-2 text-slate-400 border-b border-slate-800 pb-2">
-                        <Timer className="w-4 h-4" />
+                    {/* Stats Card - Updated Layout */}
+                    <div className="h-56 bg-slate-900 rounded-lg border border-slate-800 p-5 shadow-xl flex flex-col relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-slate-800/50 to-transparent rounded-bl-full pointer-events-none"></div>
+
+                      <div className="flex items-center gap-2 text-slate-400 border-b border-slate-800 pb-2 mb-4">
+                        <Timer className="w-4 h-4 text-brand-red" />
                         <h3 className="text-sm font-bold uppercase tracking-wider">Race Pace</h3>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 mt-2">
-                        <div className="bg-slate-950/50 p-2 rounded border-l-2 border-cyan-500">
-                          <span className="text-[10px] text-slate-500 block">MAX SPEED (D1)</span>
-                          <span className="text-xl font-mono text-cyan-400">
-                            {Math.max(...telemetryData.d1.Speed).toFixed(0)} <span className="text-xs">km/h</span>
-                          </span>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Driver 1 Stats */}
+                        <div className="flex flex-col gap-1">
+                          <div className="text-xs font-bold text-cyan-400 mb-1">{telemetryData.d1_best ? 'D1 BEST' : 'D1'}</div>
+                          <div className="bg-slate-950/80 p-2 rounded border-l-2 border-cyan-500">
+                            <span className="text-[10px] text-slate-500 block">LAP TIME</span>
+                            <span className="text-lg font-mono text-white">{telemetryData.d1_best || "N/A"}</span>
+                          </div>
+                          <div className="bg-slate-950/80 p-2 rounded border-l-2 border-cyan-500/50">
+                            <span className="text-[10px] text-slate-500 block">TOP SPEED</span>
+                            <span className="text-base font-mono text-cyan-400">
+                              {Math.max(...telemetryData.d1.Speed).toFixed(0)} <span className="text-[10px]">km/h</span>
+                            </span>
+                          </div>
                         </div>
-                        <div className="bg-slate-950/50 p-2 rounded border-l-2 border-brand-red">
-                          <span className="text-[10px] text-slate-500 block">MAX SPEED (D2)</span>
-                          <span className="text-xl font-mono text-brand-red">
-                            {Math.max(...telemetryData.d2.Speed).toFixed(0)} <span className="text-xs">km/h</span>
-                          </span>
+
+                        {/* Driver 2 Stats */}
+                        <div className="flex flex-col gap-1">
+                          <div className="text-xs font-bold text-brand-red mb-1">{telemetryData.d2_best ? 'D2 BEST' : 'D2'}</div>
+                          <div className="bg-slate-950/80 p-2 rounded border-l-2 border-brand-red">
+                            <span className="text-[10px] text-slate-500 block">LAP TIME</span>
+                            <span className="text-lg font-mono text-white">{telemetryData.d2_best || "N/A"}</span>
+                          </div>
+                          <div className="bg-slate-950/80 p-2 rounded border-l-2 border-brand-red/50">
+                            <span className="text-[10px] text-slate-500 block">TOP SPEED</span>
+                            <span className="text-base font-mono text-brand-red">
+                              {Math.max(...telemetryData.d2.Speed).toFixed(0)} <span className="text-[10px]">km/h</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
-
-                      <div className="mt-auto text-xs text-center text-slate-600 font-mono">
-                        SYNC_ID: {hoverIndex ?? '---'} / 500
+                      {/* SYNC ID - Moved Absolute Bottom Right */}
+                      <div className="absolute -bottom-2 right-2 text-[10px] text-slate-600 font-mono bg-slate-950/80 px-2 py-1 rounded border border-slate-800">
+                        SYNC: {hoverIndex ?? 'READY'}
                       </div>
                     </div>
                   </div>
