@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayCircle, AlertTriangle } from 'lucide-react';
 
-export default function Controls({ onAnalyze, status, errorMsg }) {
-    const [params, setParams] = useState({
+export default function Controls({ onAnalyze, status, errorMsg, initialParams }) {
+    const [params, setParams] = useState(initialParams || {
         year: '2024',
         race: 'Silverstone',
         session: 'Q',
         driver1: 'VER',
         driver2: 'NOR'
     });
+
+    useEffect(() => {
+        if (initialParams) {
+            setParams(initialParams);
+        }
+    }, [initialParams]);
 
     const handleAnalyze = () => {
         if (onAnalyze) {

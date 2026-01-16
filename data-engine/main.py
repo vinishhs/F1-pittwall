@@ -101,9 +101,63 @@ async def get_telemetry(
     except ValueError as ve:
         # Client errors (e.g., driver not found)
         raise HTTPException(status_code=400, detail=str(ve))
+@app.get("/stints")
+async def get_stints(
+    year: int = Query(..., description="Season Year"),
+    race: str = Query(..., description="Race Name or Round Number"),
+    session: str = Query("Q", description="Session Identifier"),
+    driver1: str = Query(..., description="Driver 1"),
+    driver2: str = Query(..., description="Driver 2")
+):
+    try:
+        f1_session = fastf1.get_session(year, race, session)
+        f1_session.load()
+        
+        laps = f1_session.laps.pick_drivers([driver1, driver2])
+        if laps.empty:
+             raise ValueError("No laps found for specified drivers.")
+
+        stints = []
+        
+        # Group by Driver and Stint
+        # fastf1 'Stint' column is float, verify existence
+        if 'Stint' not in laps.columns:
+             # Fallback if Stint column missing (rare in recent data)
+             return JSONResponse(content=[])
+
+        for driver in [driver1, driver2]:
+            driver_laps = laps.pick_driver(driver)
+            if driver_laps.empty:
+                continue
+
+            # Group by Stint
+            for stint_id, stint_data in driver_laps.groupby('Stint'):
+                # Get Compound (take mode or first)
+                compound = stint_data['Compound'].mode()
+                if not compound.empty:
+                    compound = compound.iloc[0]
+                else:
+                    compound = "UNKNOWN"
+                
+                start_lap = int(stint_data['LapNumber'].min())
+                end_lap = int(stint_data['LapNumber'].max())
+                tyre_life = int(len(stint_data))
+
+                stints.append({
+                    "Driver": driver,
+                    "Stint": int(stint_id),
+                    "Compound": compound,
+                    "StartLap": start_lap,
+                    "EndLap": end_lap,
+                    "TyreLife": tyre_life
+                })
+
+        return JSONResponse(content=stints)
+
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        # Server errors (e.g., FastF1 failures)
-        # In a real app, we might log the full stack trace
+        print(f"Stint Error: {e}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 if __name__ == "__main__":
