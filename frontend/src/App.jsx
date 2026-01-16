@@ -25,7 +25,7 @@ export default function App() {
 
     try {
       console.log("Requesting Telemetry...", params);
-      const res = await client.get('/api/telemetry', { params });
+      const res = await client.get('/telemetry', { params });
 
       if (res.data.distance && res.data.distance.length === 500) {
         setTelemetryData(res.data);
