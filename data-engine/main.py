@@ -59,23 +59,39 @@ async def get_telemetry(
             
             # Ensure the source is sorted by distance
             source_sorted = source_data.sort_values('Distance')
-            
             x_vals = source_sorted['Distance'].values
             
+            # Interpolate Data Columns
             for col in columns_to_interp:
                 y_vals = source_sorted[col].values
-                # Interpolate
                 interp_vals = np.interp(common_distance, x_vals, y_vals)
                 result[col] = interp_vals.tolist()
+            
+            # Interpolate Time (convert to seconds first)
+            # Time is a timedelta64[ns]
+            time_seconds = source_sorted['Time'].dt.total_seconds().values
+            result['Time'] = np.interp(common_distance, x_vals, time_seconds).tolist()
             
             return result
 
         d1_interp = interpolate_telemetry(d1_tel)
         d2_interp = interpolate_telemetry(d2_tel)
 
+        # Calculate Delta (Driver 2 - Driver 1)
+        # If D2 is ahead in time (larger value), it means they are BEHIND on track (slower).
+        # Standard F1 Delta: Reference (D1) vs Target (D2). 
+        # Positive Delta usually means Target is slower (behind).
+        try:
+            delta = np.array(d2_interp['Time']) - np.array(d1_interp['Time'])
+            print(f"Delta calculated. Min: {np.min(delta)}, Max: {np.max(delta)}")
+        except Exception as e:
+            print(f"Delta Calculation Failed: {e}")
+            delta = np.zeros(500)
+
         # Construct final JSON response
         response_data = {
             "distance": common_distance.tolist(),
+            "delta": delta.tolist(),
             "d1": d1_interp,
             "d2": d2_interp
         }
