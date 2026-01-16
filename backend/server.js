@@ -36,6 +36,25 @@ app.get('/api/telemetry', async (req, res) => {
             params: { year, race, session, driver1, driver2 }
         });
 
+        // --- Auto-Save to MongoDB on Success ---
+        // If we reached here, the Python engine returned 200 OK with data.
+        try {
+            const newComparison = new Comparison({
+                title: `${year} ${race} - ${driver1} vs ${driver2}`, // Auto-generate title
+                year,
+                race,
+                session,
+                driver1,
+                driver2
+            });
+            await newComparison.save();
+            console.log("Auto-saved comparison to MongoDB.");
+        } catch (dbErr) {
+            console.error("Warning: Failed to auto-save to MongoDB:", dbErr.message);
+            // We do NOT fail the request if saving fails, we just log it.
+        }
+        // ---------------------------------------
+
         res.json(response.data);
     } catch (err) {
         console.error('Error in /api/telemetry proxy:', err.message);

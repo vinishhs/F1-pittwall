@@ -1,7 +1,7 @@
 import React from 'react';
 import Plot from 'react-plotly.js';
 
-export default function TelemetryCharts({ data }) {
+export default function TelemetryCharts({ data, onHover }) {
     if (!data) return null;
 
     const { distance, d1, d2, delta } = data;
@@ -146,6 +146,11 @@ export default function TelemetryCharts({ data }) {
                 useResizeHandler={true}
                 style={{ width: "100%", height: "100%" }}
                 config={{ responsive: true, displayModeBar: false }}
+                onHover={(e) => {
+                    if (onHover && e.points && e.points.length > 0) {
+                        onHover(e.points[0].pointIndex);
+                    }
+                }}
             />
         </div>
     );
