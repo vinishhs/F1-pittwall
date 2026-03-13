@@ -10,7 +10,12 @@ export default function Sidebar() {
         const fetchComparisons = async () => {
             try {
                 const res = await client.get('/comparisons');
-                setComparisons(res.data);
+                // Handle the graceful degradation object structure
+                if (res.data && res.data.warning && Array.isArray(res.data.data)) {
+                    setComparisons(res.data.data);
+                } else {
+                    setComparisons(Array.isArray(res.data) ? res.data : []);
+                }
             } catch (err) {
                 console.error("Failed to load comparisons", err);
             } finally {

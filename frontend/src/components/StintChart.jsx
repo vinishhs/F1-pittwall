@@ -2,9 +2,11 @@ import React from 'react';
 import Plot from 'react-plotly.js';
 
 export default function StintChart({ data }) {
+    console.log("Stint Data Received:", data);
+
     if (!data || data.length === 0) return (
         <div className="w-full h-full bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center text-slate-600 text-xs uppercase tracking-widest animate-in fade-in">
-            Strategy Data Unavailable for this Session Type
+            No Stint Data Available
         </div>
     );
 
@@ -19,23 +21,22 @@ export default function StintChart({ data }) {
     };
 
     // Prepare data for Plotly
-    // We iterate through stints and create a trace for EACH stint to allow individual coloring
-    // In a stacked horizontal bar, x is length, y is category (Driver)
     const traces = data.map((stint) => {
-        const duration = stint.EndLap - stint.StartLap;
-        const color = compoundColors[stint.Compound.toUpperCase()] || compoundColors['UNKNOWN'];
+        // Fallback for length if API returns legacy format
+        const length = stint.StintLength || (stint.EndLap - stint.StartLap);
+        const color = compoundColors[stint.Compound?.toUpperCase()] || compoundColors['UNKNOWN'];
 
         return {
-            x: [duration],
+            x: [length],
             y: [stint.Driver], // Y-axis is Driver Name
             base: [stint.StartLap], // Offset from start
             orientation: 'h',
             type: 'bar',
             name: stint.Compound, // For Legend
-            text: stint.Compound.substring(0, 1), // S, M, H
+            text: stint.Compound ? stint.Compound.substring(0, 1) : '?',
             textposition: 'auto',
             hoverinfo: 'text',
-            hovertext: `<b style="color:${color}">${stint.Compound}</b><br>Laps: ${stint.StartLap} - ${stint.EndLap}<br>Life: ${stint.TyreLife}`,
+            hovertext: `<b style="color:${color}">${stint.Compound}</b><br>Laps: ${stint.StartLap} (Len: ${length})<br>Life: ${stint.TyreLife}`,
             marker: {
                 color: color,
                 line: {

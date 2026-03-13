@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const connectDB = require('./db');
 const Comparison = require('./models/Comparison');
+const mongoose = require('mongoose');
 
 const app = express();
 
@@ -38,20 +39,22 @@ app.get('/api/telemetry', async (req, res) => {
 
         // --- Auto-Save to MongoDB on Success ---
         // If we reached here, the Python engine returned 200 OK with data.
-        try {
-            const newComparison = new Comparison({
-                title: `${year} ${race} - ${driver1} vs ${driver2}`, // Auto-generate title
-                year,
-                race,
-                session,
-                driver1,
-                driver2
-            });
-            await newComparison.save();
-            console.log("Auto-saved comparison to MongoDB.");
-        } catch (dbErr) {
-            console.error("Warning: Failed to auto-save to MongoDB:", dbErr.message);
-            // We do NOT fail the request if saving fails, we just log it.
+        if (mongoose.connection.readyState === 1) {
+            try {
+                const newComparison = new Comparison({
+                    title: `${year} ${race} - ${driver1} vs ${driver2}`, // Auto-generate title
+                    year,
+                    race,
+                    session,
+                    driver1,
+                    driver2
+                });
+                await newComparison.save();
+                console.log("Auto-saved comparison to MongoDB.");
+            } catch (dbErr) {
+                console.error("Warning: Failed to auto-save to MongoDB:", dbErr.message);
+                // We do NOT fail the request if saving fails, we just log it.
+            }
         }
         // ---------------------------------------
 
@@ -83,11 +86,14 @@ app.get('/api/stints', async (req, res) => {
         // Construct the Python service URL
         const pythonUrl = `${process.env.PYTHON_ENGINE_URL}/stints`;
 
-        console.log(`Proxying stint request to: ${pythonUrl}`);
+        console.log(`[PROXY] Fetching Stints: ${pythonUrl}`);
+        console.log(`[PROXY] Params:`, { year, race, session, driver1, driver2 });
 
         const response = await axios.get(pythonUrl, {
             params: { year, race, session, driver1, driver2 }
         });
+
+        // console.log("Stints Response Data:", response.data); // Optional: verbose log
 
         res.json(response.data);
     } catch (err) {
@@ -108,6 +114,9 @@ app.get('/api/stints', async (req, res) => {
  * @access  Public
  */
 app.post('/api/comparisons', async (req, res) => {
+    if (mongoose.connection.readyState !== 1) {
+        return res.status(200).json({ warning: "History unavailable", data: [] });
+    }
     try {
         const { title, year, race, session, driver1, driver2 } = req.body;
 
@@ -134,12 +143,45 @@ app.post('/api/comparisons', async (req, res) => {
  * @access  Public
  */
 app.get('/api/comparisons', async (req, res) => {
+    if (mongoose.connection.readyState !== 1) {
+        return res.status(200).json({ warning: "History unavailable", data: [] });
+    }
     try {
         const comparisons = await Comparison.find().sort({ createdAt: -1 });
         res.json(comparisons);
     } catch (err) {
         console.error('Error fetching comparisons:', err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+/**
+ * @route   GET /api/sectors
+ * @desc    Proxy to Python Data Engine for Sector Analysis.
+ * @access  Public
+ */
+app.get('/api/sectors', async (req, res) => {
+    try {
+        const { year, race, session, driver1, driver2 } = req.query;
+        const pythonUrl = `${process.env.PYTHON_ENGINE_URL}/sectors`;
+
+        console.log(`[PROXY] Fetching Sectors: ${pythonUrl}`);
+        console.log(`[PROXY] Params:`, { year, race, session, driver1, driver2 });
+
+        const response = await axios.get(pythonUrl, {
+            params: { year, race, session, driver1, driver2 }
+        });
+
+        res.json(response.data);
+    } catch (err) {
+        console.error('Error in /api/sectors proxy:', err.message);
+        if (err.response) {
+            res.status(err.response.status).json(err.response.data);
+        } else if (err.request) {
+            res.status(503).json({ msg: 'Python Data Engine not reachable' });
+        } else {
+            res.status(500).json({ msg: 'Server Error' });
+        }
     }
 });
 

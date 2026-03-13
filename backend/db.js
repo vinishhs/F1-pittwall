@@ -5,8 +5,8 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB Connected...');
   } catch (err) {
-    console.error('Database Connection Failed:', err.message);
-    process.exit(1);
+    console.warn('⚠️ Database connection failed. Running in Stateless Mode.');
+    // process.exit(1);
   }
 };
 

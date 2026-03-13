@@ -4,7 +4,8 @@ import Controls from './components/Controls';
 import TelemetryCharts from './components/TelemetryCharts';
 import TrackMap from './components/TrackMap';
 import HistoryGallery from './components/HistoryGallery';
-import StintChart from './components/StintChart';
+import SectorChart from './components/SectorChart';
+import StatsCard from './components/StatsCard'; // Added missing import
 import { Activity, Zap, Timer, Map, Archive, BarChart2 } from 'lucide-react';
 import client from './api/client';
 
@@ -12,7 +13,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('analysis'); // 'analysis' | 'garage'
 
   const [telemetryData, setTelemetryData] = useState(null);
-  const [stintData, setStintData] = useState(null); // New State for Stints
+  const [sectorData, setSectorData] = useState(null); // New State for Sectors
   const [status, setStatus] = useState('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [hoverIndex, setHoverIndex] = useState(null);
@@ -24,12 +25,12 @@ export default function App() {
     setHoverIndex(index);
   }, []);
 
-  // Updated to fetch both Telemetry AND Stints
+  // Updated to fetch Telemetry AND Sectors
   const handleFetchData = async (params) => {
     setStatus('loading');
     setErrorMsg('');
     setTelemetryData(null);
-    setStintData(null);
+    setSectorData(null);
     setHoverIndex(null);
 
     // Keep active tab in Analysis when re-fetching
@@ -39,10 +40,10 @@ export default function App() {
       console.log("Requesting Analysis...", params);
 
       // Parallel Requests
-      // Note: client baseURL includes '/api', so we use '/telemetry' and '/stints'
-      const [telemetryRes, stintRes] = await Promise.all([
+      // Note: client baseURL includes '/api', so we use '/telemetry' and '/sectors'
+      const [telemetryRes, sectorRes] = await Promise.all([
         client.get('/telemetry', { params }),
-        client.get('/stints', { params })
+        client.get('/sectors', { params })
       ]);
 
       // Telemetry Validation
@@ -52,9 +53,9 @@ export default function App() {
         throw new Error("Telemetry data invalid.");
       }
 
-      // Stint Data
-      if (stintRes.data) {
-        setStintData(stintRes.data);
+      // Sector Data
+      if (sectorRes.data) {
+        setSectorData(sectorRes.data);
       }
 
       setStatus('success');
@@ -82,6 +83,10 @@ export default function App() {
     handleFetchData(params);
   };
 
+  // Helper for loaded params display in chart
+  const d1Name = loadedParams?.driver1 || 'D1';
+  const d2Name = loadedParams?.driver2 || 'D2';
+
   return (
     <div className="flex h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans selection:bg-brand-red selection:text-white">
       {/* Sidebar Area */}
@@ -94,7 +99,7 @@ export default function App() {
           <div className="flex items-center gap-6">
             <div className="flex items-center">
               <Activity className="w-6 h-6 text-brand-red mr-3" />
-              <h1 className="text-xl font-bold tracking-wide">VIRTUAL PIT WALL <span className="text-xs text-slate-500 font-normal ml-2">PHASE 6.5</span></h1>
+              <h1 className="text-xl font-bold tracking-wide">VIRTUAL PIT WALL <span className="text-xs text-slate-500 font-normal ml-2">PHASE 7</span></h1>
             </div>
 
             {/* Navigation Tabs */}
@@ -117,8 +122,8 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4 text-xs font-mono text-slate-500">
-            {status === 'loading' && <span className="text-brand-red animate-pulse flex items-center gap-2"><Zap className="w-3 h-3" /> SYNCING DATA...</span>}
-            {status === 'success' && <span className="text-green-500 flex items-center gap-2">● READY</span>}
+            {status === 'loading' && <span className="text-brand-red animate-pulse flex items-center gap-2"><Zap className="w-3 h-3" /> ANALYZING...</span>}
+            {status === 'success' && <span className="text-green-500 flex items-center gap-2">● LIVE</span>}
           </div>
         </header>
 
@@ -150,7 +155,7 @@ export default function App() {
               </div>
 
               {/* Main Visualization Grid */}
-              {telemetryData && status !== 'error' ? (
+              {telemetryData && sectorData && status !== 'error' ? (
                 <div className="flex-1 grid grid-cols-4 gap-6 min-h-0 animate-in fade-in duration-500">
                   {/* Left Column: Charts (75%) */}
                   <div className="col-span-3 flex flex-col gap-4 min-h-0">
@@ -159,9 +164,9 @@ export default function App() {
                       <TelemetryCharts data={telemetryData} onHover={handleHover} />
                     </div>
 
-                    {/* Stint Strategy Chart (New Phase 6) */}
+                    {/* Sector Dominance Chart (New Phase 7) */}
                     <div className="h-40 shrink-0">
-                      <StintChart data={stintData} />
+                      <SectorChart data={sectorData} driver1={d1Name} driver2={d2Name} />
                     </div>
                   </div>
 
@@ -173,50 +178,7 @@ export default function App() {
                     </div>
 
                     {/* Stats Card - Updated Layout */}
-                    <div className="h-56 bg-slate-900 rounded-lg border border-slate-800 p-5 shadow-xl flex flex-col relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-slate-800/50 to-transparent rounded-bl-full pointer-events-none"></div>
-
-                      <div className="flex items-center gap-2 text-slate-400 border-b border-slate-800 pb-2 mb-4">
-                        <Timer className="w-4 h-4 text-brand-red" />
-                        <h3 className="text-sm font-bold uppercase tracking-wider">Race Pace</h3>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* Driver 1 Stats */}
-                        <div className="flex flex-col gap-1">
-                          <div className="text-xs font-bold text-cyan-400 mb-1">{telemetryData.d1_best ? 'D1 BEST' : 'D1'}</div>
-                          <div className="bg-slate-950/80 p-2 rounded border-l-2 border-cyan-500">
-                            <span className="text-[10px] text-slate-500 block">LAP TIME</span>
-                            <span className="text-lg font-mono text-white">{telemetryData.d1_best || "N/A"}</span>
-                          </div>
-                          <div className="bg-slate-950/80 p-2 rounded border-l-2 border-cyan-500/50">
-                            <span className="text-[10px] text-slate-500 block">TOP SPEED</span>
-                            <span className="text-base font-mono text-cyan-400">
-                              {Math.max(...telemetryData.d1.Speed).toFixed(0)} <span className="text-[10px]">km/h</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Driver 2 Stats */}
-                        <div className="flex flex-col gap-1">
-                          <div className="text-xs font-bold text-brand-red mb-1">{telemetryData.d2_best ? 'D2 BEST' : 'D2'}</div>
-                          <div className="bg-slate-950/80 p-2 rounded border-l-2 border-brand-red">
-                            <span className="text-[10px] text-slate-500 block">LAP TIME</span>
-                            <span className="text-lg font-mono text-white">{telemetryData.d2_best || "N/A"}</span>
-                          </div>
-                          <div className="bg-slate-950/80 p-2 rounded border-l-2 border-brand-red/50">
-                            <span className="text-[10px] text-slate-500 block">TOP SPEED</span>
-                            <span className="text-base font-mono text-brand-red">
-                              {Math.max(...telemetryData.d2.Speed).toFixed(0)} <span className="text-[10px]">km/h</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      {/* SYNC ID - Moved Absolute Bottom Right */}
-                      <div className="absolute -bottom-2 right-2 text-[10px] text-slate-600 font-mono bg-slate-950/80 px-2 py-1 rounded border border-slate-800">
-                        SYNC: {hoverIndex ?? 'READY'}
-                      </div>
-                    </div>
+                    <StatsCard sectorData={sectorData} />
                   </div>
                 </div>
               ) : (
@@ -235,8 +197,8 @@ export default function App() {
           {status === 'loading' && (
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
               <div className="w-12 h-12 border-4 border-brand-red border-t-transparent rounded-full animate-spin mb-4"></div>
-              <h2 className="text-xl font-bold text-white tracking-widest animate-pulse">COMPUTING STRATEGY</h2>
-              <p className="text-slate-400 text-sm mt-2">Analyzing Telemetry & Tire Degradation...</p>
+              <h2 className="text-xl font-bold text-white tracking-widest animate-pulse">CRUNCHING DATA</h2>
+              <p className="text-slate-400 text-sm mt-2">Calculating Sector Deltas & Theoretical Bests...</p>
             </div>
           )}
         </div>
