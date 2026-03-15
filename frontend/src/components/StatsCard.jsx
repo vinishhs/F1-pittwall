@@ -54,16 +54,31 @@ export default function StatsCard({ sectorData }) {
       <div className="mt-auto space-y-2">
         <div className="flex justify-between items-center text-xs">
           <span className="font-bold text-cyan-400">D1 THEORETICAL</span>
-          <span className="font-mono text-white">{sectorData.d1.theoretical.toFixed(3)}s</span>
+          <div className="flex items-center gap-2">
+            {sectorData.d1.actual_lap > sectorData.d1.theoretical && (
+              <span className="px-1.5 py-0.5 rounded border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-bold shadow-[0_0_10px_rgba(34,197,94,0.3)]">
+                Potential: -{(sectorData.d1.actual_lap - sectorData.d1.theoretical).toFixed(3)}s
+              </span>
+            )}
+            <span className="font-mono text-white">{sectorData.d1.theoretical.toFixed(3)}s</span>
+          </div>
         </div>
         <div className="flex justify-between items-center text-xs">
           <span className="font-bold text-brand-red">D2 THEORETICAL</span>
-          <span className="font-mono text-white">{sectorData.d2.theoretical.toFixed(3)}s</span>
+          <div className="flex items-center gap-2">
+            {sectorData.d2.actual_lap > sectorData.d2.theoretical && (
+              <span className="px-1.5 py-0.5 rounded border border-green-500/30 bg-green-500/10 text-green-400 text-[10px] font-bold shadow-[0_0_10px_rgba(34,197,94,0.3)]">
+                Potential: -{(sectorData.d2.actual_lap - sectorData.d2.theoretical).toFixed(3)}s
+              </span>
+            )}
+            <span className="font-mono text-white">{sectorData.d2.theoretical.toFixed(3)}s</span>
+          </div>
         </div>
       </div>
 
-      {/* Sync ID moved to bottom-right */}
-      <div className="absolute bottom-4 right-6 text-[10px] text-slate-600 font-mono bg-slate-950/80 px-2 py-1 rounded border border-slate-800">
+      {/* Sync ID pinned to absolute bottom-right corner with strong engineer terminal vibe */}
+      <div className="absolute bottom-2 right-2 text-[10px] text-green-400 font-mono bg-black/60 px-2 py-1 rounded border border-green-500/30 shadow-[0_0_8px_rgba(34,197,94,0.2)] tracking-widest flex items-center gap-2 z-10">
+        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
         SYNC: READY
       </div>
     </div>

@@ -1,7 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Plot from 'react-plotly.js';
 
 export default function TrackMap({ data, hoverIndex }) {
+    const [mapMode, setMapMode] = useState('dominance');
+
     if (!data) return (
         <div className="w-full h-full bg-slate-900 rounded-lg p-4 border border-slate-800 flex items-center justify-center text-slate-500">
             No Track Data
@@ -14,7 +16,18 @@ export default function TrackMap({ data, hoverIndex }) {
     // We use 'markers' mode with a dense point cloud to simulate a multi-colored line.
     // This allows us to color each point individually based on the delta.
     const trackTrace = useMemo(() => {
-        const colors = delta.map(d => d < 0 ? '#06b6d4' : '#ef4444'); // Cyan (D1 faster) vs Red (D2 faster)
+        let colors = [];
+        if (mapMode === 'dominance') {
+            colors = delta.map(d => d < 0 ? '#06b6d4' : '#ef4444'); // Cyan (D1 faster) vs Red (D2 faster)
+        } else {
+            // Energy Management Mode
+            colors = d1.EnergyDelta.map((d, i) => {
+                const t = d1.Throttle[i];
+                if (d < 0 && t > 95) return '#ff003c'; // Neon Red (Deploy/Boost)
+                if (d > 0) return '#00ff41'; // Neon Green (Recharge)
+                return '#94a3b8'; // Neutral
+            });
+        }
 
         return {
             x: d1.X,
@@ -23,12 +36,12 @@ export default function TrackMap({ data, hoverIndex }) {
             type: 'scatter',
             marker: {
                 color: colors,
-                size: 6, // Thickness of the "line"
+                size: mapMode === 'energy' ? 6 : 6, // Thickness of the "line"
             },
             hoverinfo: 'none', // Disable default hover info to keep it clean
             name: 'Track Map'
         };
-    }, [d1, delta]);
+    }, [d1, delta, mapMode]);
 
     // 2. Prepare Scrubber Trace (Pulsing Dot)
     const scrubberTrace = useMemo(() => {
@@ -83,26 +96,63 @@ export default function TrackMap({ data, hoverIndex }) {
 
     return (
         <div className="w-full h-full bg-slate-900 rounded-lg border border-slate-800 shadow-xl overflow-hidden relative">
-            <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-black/50 rounded text-xs font-bold text-slate-300">
-                TRACK DOMINANCE
+            <div className="absolute top-2 left-2 z-10 flex text-xs font-bold text-slate-300 bg-black/50 rounded overflow-hidden">
+                <button 
+                    onClick={() => setMapMode('dominance')}
+                    className={`px-3 py-1 ${mapMode === 'dominance' ? 'bg-slate-700 text-white' : 'hover:bg-slate-800'}`}
+                >
+                    DOMINANCE
+                </button>
+                <button 
+                    onClick={() => setMapMode('energy')}
+                    className={`px-3 py-1 ${mapMode === 'energy' ? 'bg-slate-700 text-white' : 'hover:bg-slate-800'}`}
+                >
+                    ENERGY
+                </button>
             </div>
             <Plot
                 data={plotData}
                 layout={layout}
                 useResizeHandler={true}
-                style={{ width: "100%", height: "100%" }}
+                style={{ 
+                    width: "100%", 
+                    height: "100%", 
+                    filter: mapMode === 'energy' ? 'drop-shadow(0 0 4px rgba(255,255,255,0.2)) drop-shadow(0 0 8px currentColor)' : 'none' 
+                }}
+                className={mapMode === 'energy' ? "energy-glow-mode" : ""}
                 config={{ responsive: true, displayModeBar: false, staticPlot: true }}
             />
+            {/* We can inject a small style tag to make the Plotly paths glow specifically if currentColor inheritance is tricky */}
+            <style>{`
+                .energy-glow-mode .scatterlayer path {
+                    filter: drop-shadow(0px 0px 6px currentColor);
+                }
+            `}</style>
             {/* Legend Overlay */}
             <div className="absolute bottom-2 right-2 z-10 flex flex-col gap-1 text-[10px] font-mono bg-black/60 p-2 rounded border border-slate-700">
-                <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
-                    <span className="text-cyan-100">Driver 1</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <span className="text-red-100">Driver 2</span>
-                </div>
+                {mapMode === 'dominance' ? (
+                    <>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
+                            <span className="text-cyan-100">Driver 1</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                            <span className="text-red-100">Driver 2</span>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                            <span className="text-red-100">Boost (MOM)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span className="text-green-100">Recharge</span>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );

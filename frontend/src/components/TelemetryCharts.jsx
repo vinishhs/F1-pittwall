@@ -89,8 +89,9 @@ export default function TelemetryCharts({ data, onHover, hoverIndex }) {
     // Conditional Coloring for Energy (Green for Recharge, Red for Boost)
     const getEnergyColors = (driverData) => {
         return driverData.Throttle.map((t, i) => {
-            if (t > 95) return '#ef4444'; // Red (Boost)
-            if (driverData.Brake[i] > 0) return '#22c55e'; // Green (Recharge)
+            const delta = driverData.EnergyDelta[i];
+            if (delta < 0 && t > 95) return '#ef4444'; // Red (Boost/MOM)
+            if (delta > 0) return '#22c55e'; // Green (Recharge)
             return '#94a3b8'; // Slate 400 (Neutral)
         });
     };
@@ -133,7 +134,13 @@ export default function TelemetryCharts({ data, onHover, hoverIndex }) {
             title: 'Distance (m)',
             showgrid: false,
             zeroline: false,
-            rangeslider: { visible: false }
+            rangeslider: { visible: false },
+            showspikes: true,
+            spikemode: 'across',
+            spikedash: 'dash',
+            spikecolor: '#ffffff',
+            spikethickness: 1,
+            hoverformat: '.0f'
         },
 
         yaxis: {
@@ -169,20 +176,31 @@ export default function TelemetryCharts({ data, onHover, hoverIndex }) {
 
     // Aero Indicator Determination
     const getAeroProps = (drs) => {
-        if (drs === 1) return { text: 'X-MODE: STRAIGHT', color: 'text-brand-cyan bg-brand-cyan/10 border-brand-cyan/30' };
-        return { text: 'Z-MODE: CORNER', color: 'text-purple-400 bg-purple-400/10 border-purple-400/30' };
+        if (drs === 1) return { 
+            text: '[X-MODE: STRAIGHT]', 
+            color: 'text-[#00f5ff] bg-[#00f5ff]/10 border-[#00f5ff] animate-pulse',
+            shadow: '0 0 10px #00f5ff'
+        };
+        return { 
+            text: '[Z-MODE: CORNER]', 
+            color: 'text-[#a855f7] bg-[#a855f7]/10 border-[#a855f7] animate-pulse',
+            shadow: '0 0 10px #a855f7'
+        };
     };
 
     // For 2026 Regulations: Determine Aero mode based on hover position or default to start
     const currentIdx = hoverIndex !== null ? hoverIndex : 0;
-    const aeroValue = d1.DRS_Mapped ? d1.DRS_Mapped[currentIdx] : (d2.DRS_Mapped ? d2.DRS_Mapped[currentIdx] : 0);
+    const aeroValue = d1.aero_mode ? d1.aero_mode[currentIdx] : (d2.aero_mode ? d2.aero_mode[currentIdx] : 0);
     const props = getAeroProps(aeroValue);
 
     return (
         <div className="w-full h-full bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-xl overflow-hidden flex flex-col">
             <div className="flex justify-between items-center mb-2 px-2">
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">2026 Aero Control</div>
-                <div className={`px-3 py-1 rounded-full border text-[10px] font-black transition-all duration-300 ${props.color}`}>
+                <div 
+                    className={`px-3 py-1 rounded-full border text-[10px] font-black transition-all duration-300 ${props.color}`}
+                    style={{ boxShadow: props.shadow }}
+                >
                     {props.text}
                 </div>
             </div>

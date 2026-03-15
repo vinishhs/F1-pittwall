@@ -79,9 +79,12 @@ async def get_telemetry(
                 
                 telemetry['Energy'] = soc
                 
+                # Energy Delta (Derivative of SoC)
+                telemetry['EnergyDelta'] = pd.Series(soc).diff().fillna(0).tolist()
+                
                 # Map DRS to X/Z Mode (1: Straight/Open -> 1, 0: Corner/Closed -> 0)
                 # FastF1 DRS is usually 0, 8, 10, 12 etc. We'll simplify: >0 is Straight Mode
-                telemetry['DRS_Mapped'] = (telemetry['DRS'] > 0).astype(int)
+                telemetry['aero_mode'] = (telemetry['DRS'] > 0).astype(int)
                 
                 return telemetry, lt_str
             except Exception as e:
@@ -102,7 +105,7 @@ async def get_telemetry(
         # Interpolation function
         def interpolate_telemetry(source_data):
             # We interpolate these columns
-            columns_to_interp = ['Speed', 'Throttle', 'Brake', 'X', 'Y', 'Energy', 'DRS_Mapped']
+            columns_to_interp = ['Speed', 'Throttle', 'Brake', 'X', 'Y', 'Energy', 'aero_mode', 'EnergyDelta']
             result = {}
             
             # Ensure the source is sorted by distance
