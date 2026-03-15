@@ -54,7 +54,7 @@ export default function TrackMap({ data, hoverIndex }) {
             type: 'scatter',
             marker: {
                 color: '#ffffff',
-                size: 14,
+                size: 16,
                 line: {
                     color: '#000000',
                     width: 2
@@ -124,8 +124,11 @@ export default function TrackMap({ data, hoverIndex }) {
             />
             {/* We can inject a small style tag to make the Plotly paths glow specifically if currentColor inheritance is tricky */}
             <style>{`
-                .energy-glow-mode .scatterlayer path {
+                .energy-glow-mode .scatterlayer .trace:first-child path {
                     filter: drop-shadow(0px 0px 6px currentColor);
+                }
+                .scatterlayer .trace:nth-child(2) path {
+                    filter: drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.8));
                 }
             `}</style>
             {/* Legend Overlay */}

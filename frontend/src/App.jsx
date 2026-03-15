@@ -128,7 +128,7 @@ export default function App() {
         </header>
 
         {/* Dashboard Content Swapper */}
-        <div className="flex-1 p-6 relative flex flex-col overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 p-6 relative flex flex-col scroll-smooth">
           {/* Background Grid Effect */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
             style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
@@ -192,16 +192,16 @@ export default function App() {
               )}
             </>
           )}
-
-          {/* Loading Overlay */}
-          {status === 'loading' && (
-            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-              <div className="w-12 h-12 border-4 border-brand-red border-t-transparent rounded-full animate-spin mb-4"></div>
-              <h2 className="text-xl font-bold text-white tracking-widest animate-pulse">CRUNCHING DATA</h2>
-              <p className="text-slate-400 text-sm mt-2">Calculating Sector Deltas & Theoretical Bests...</p>
-            </div>
-          )}
         </div>
+
+        {/* Loading Overlay */}
+        {status === 'loading' && (
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+            <div className="w-12 h-12 border-4 border-brand-red border-t-transparent rounded-full animate-spin mb-4"></div>
+            <h2 className="text-xl font-bold text-white tracking-widest animate-pulse">CRUNCHING DATA</h2>
+            <p className="text-slate-400 text-sm mt-2">Calculating Sector Deltas & Theoretical Bests...</p>
+          </div>
+        )}
       </main>
     </div>
   );
