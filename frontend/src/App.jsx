@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import Sidebar from './components/Sidebar';
 import Controls from './components/Controls';
 import TelemetryCharts from './components/TelemetryCharts';
 import TrackMap from './components/TrackMap';
@@ -86,13 +85,12 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen w-full bg-terminal-base text-[#c8d6e5] font-mono scanline-bg selection:bg-brand-cyan/30 selection:text-white">
-      {/* Sidebar Area */}
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative overflow-hidden">
         {/* === TOP HEADER BAR === */}
-        <header className="h-12 border-b border-terminal-border flex items-center justify-between px-6 bg-terminal-surface/80 backdrop-blur-xl z-20 shrink-0">
+        <header className="h-14 border-b border-terminal-border grid grid-cols-[1fr_auto_1fr] items-center px-6 bg-terminal-surface backdrop-blur-xl z-20 shrink-0">
+          <div></div> {/* Left Spacer for symmetry */}
+
           <div className="flex items-center gap-8">
             {/* Logo */}
             <div className="flex items-center gap-2">
@@ -100,7 +98,7 @@ export default function App() {
                 <Activity className="w-4 h-4 text-brand-cyan" />
               </div>
               <h1 className="text-sm tracking-widest text-brand-cyan terminal-glow">
-                <span className="font-bold">ENGINEER</span><span className="italic opacity-70">TERMINAL</span>
+                <span className="font-bold">F1</span> <span className="italic opacity-70">VIRTUAL PITWALL</span>
               </h1>
             </div>
 
@@ -122,34 +120,46 @@ export default function App() {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-end gap-4">
             {status === 'loading' && <span className="text-brand-crimson text-[10px] tracking-wider animate-pulse flex items-center gap-2"><Zap className="w-3 h-3" /> PROCESSING...</span>}
             {status === 'success' && <span className="text-brand-cyan text-[10px] tracking-wider flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-brand-cyan terminal-blink"></span> LIVE_LINK</span>}
-            <Settings className="w-4 h-4 text-[#4a5568] cursor-pointer hover:text-brand-cyan transition" />
-            <div className="w-7 h-7 rounded border border-terminal-border flex items-center justify-center bg-terminal-elevated cursor-pointer hover:border-brand-cyan/30 transition">
-              <User className="w-3.5 h-3.5 text-[#4a5568]" />
-            </div>
           </div>
         </header>
 
-        {/* Dashboard Content Swapper */}
-        <div className="flex-1 p-5 relative flex flex-col overflow-y-auto">
+        {/* === FIXED CONTROLS SECTION === */}
+        {activeTab !== 'garage' && (
+          <div className="px-5 pt-5 pb-2 bg-terminal-base border-b border-terminal-border/20 z-10">
+            <Controls
+              key={loadedParams ? JSON.stringify(loadedParams) : 'default'}
+              initialParams={loadedParams}
+              onAnalyze={handleFetchData}
+              status={status}
+              errorMsg={errorMsg}
+            />
+          </div>
+        )}
+
+        {/* === SCROLLABLE DASHBOARD AREA === */}
+        <div className="flex-1 w-full relative flex flex-col overflow-y-auto px-5 py-3">
+          {/* Loading Overlay (Data Only) */}
+          {status === 'loading' && (
+            <div className="absolute inset-0 w-full h-full bg-terminal-base/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 border-2 border-brand-cyan/20 border-t-brand-cyan rounded-full animate-spin mb-6 drop-shadow-[0_0_10px_rgba(0,240,255,0.2)]"></div>
+              <h2 className="text-xl text-brand-cyan tracking-[0.4em] terminal-glow animate-pulse uppercase">CRUNCHING_DATA</h2>
+              <p className="text-[#4a5568] text-[11px] mt-4 tracking-[0.3em] font-mono uppercase leading-relaxed">
+                [ ACCESSING TELEMETRY_ENGINE_V7.4 ]
+                <br />
+                CALCULATING_SECTOR_DELTAS_AND_THEORETICAL_BESTS...
+              </p>
+            </div>
+          )}
+
           {activeTab === 'garage' ? (
             <div className="flex-1 animate-in slide-in-from-right-4 duration-300">
               <HistoryGallery onLoad={handleLoadHistory} />
             </div>
           ) : (
             <>
-              {/* Controls Section */}
-              <div className="mb-5 z-10">
-                <Controls
-                  key={loadedParams ? JSON.stringify(loadedParams) : 'default'}
-                  initialParams={loadedParams}
-                  onAnalyze={handleFetchData}
-                  status={status}
-                  errorMsg={errorMsg}
-                />
-              </div>
 
               {/* Main Visualization Grid */}
               {telemetryData && sectorData && status !== 'error' ? (
@@ -178,12 +188,12 @@ export default function App() {
                 )
               ) : (
                 status !== 'loading' && (
-                  <div className="flex-1 flex flex-col items-center justify-center text-[#4a5568] z-0">
+                  <div className="flex-1 flex flex-col items-center justify-center text-[#4a5568] z-0 py-20">
                     <Map className="w-16 h-16 mb-4 opacity-20" />
                     {status === 'error' ? (
                         <p className="text-sm text-brand-crimson">{errorMsg}</p>
                     ) : (
-                        <p className="text-sm tracking-wider">SELECT RACE PARAMETERS TO INITIALIZE_</p>
+                        <p className="text-sm tracking-wider uppercase">READY_FOR_INITIALIZATION_</p>
                     )}
                   </div>
                 )
@@ -200,15 +210,6 @@ export default function App() {
           </div>
           <span className="text-[#4a5568]">BROADCAST CORE INTERFACE // V7.4.2_BUILD.092</span>
         </footer>
-
-        {/* Loading Overlay */}
-        {status === 'loading' && (
-          <div className="absolute inset-0 bg-terminal-base/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-            <div className="w-12 h-12 border-2 border-brand-cyan/30 border-t-brand-cyan rounded-full animate-spin mb-4"></div>
-            <h2 className="text-sm text-brand-cyan tracking-[0.3em] terminal-glow animate-pulse">CRUNCHING DATA</h2>
-            <p className="text-[#4a5568] text-[11px] mt-2 tracking-wider">Calculating Sector Deltas & Theoretical Bests...</p>
-          </div>
-        )}
       </main>
     </div>
   );
