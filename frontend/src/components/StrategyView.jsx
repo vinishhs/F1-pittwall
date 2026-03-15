@@ -219,7 +219,7 @@ export default function StrategyView({ loadedParams }) {
                         const targetDriver = loadedParams.driver1 === info.driver ? loadedParams.driver2 : loadedParams.driver1;
 
                         return (
-                            <div key={idx} className="bg-slate-900 border-l-4 border-l-green-500 rounded-r-lg p-4 border border-slate-800 shadow-2xl hover:bg-slate-800/80 transition-colors">
+                            <div key={idx} className="bg-slate-900/80 backdrop-blur-xl border-l-4 border-l-green-500 rounded-r-lg p-4 border border-slate-800 shadow-2xl hover:bg-slate-800 transition-all duration-300">
                                 <div className="flex items-center justify-between mb-3">
                                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
                                         STRATEGY INSIGHT: <span style={{ color: info.color }}>{info.driver}</span>
@@ -230,13 +230,19 @@ export default function StrategyView({ loadedParams }) {
                                 </div>
                                 <div className="flex items-center gap-8">
                                     <div>
-                                        <p className="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-tight">Window: Laps</p>
-                                        <p className="text-3xl font-black text-white leading-none">{info.start} — {info.end}</p>
+                                        <p className="text-[10px] text-slate-500 uppercase font-extrabold mb-1 tracking-wider">RECOMMENDED WINDOW</p>
+                                        <p className="text-2xl font-black text-white leading-none">LAPS {info.start} — {info.end}</p>
                                     </div>
                                     <div className="border-l border-slate-800 pl-8">
-                                        <p className="text-[10px] text-slate-500 uppercase font-bold mb-1 tracking-tight">Traffic: {isClear ? 'CLEAR' : 'TRAFFIC'}</p>
+                                        <p className="text-[10px] text-slate-500 uppercase font-extrabold mb-1 tracking-wider">TRAFFIC</p>
                                         <p className={`text-sm font-bold ${isClear ? 'text-green-400' : 'text-orange-400'}`}>
-                                            EXIT: {exitLabel} <span className="text-[10px] opacity-60 font-mono italic">vs {targetDriver}</span>
+                                            {isClear ? 'CLEAR' : 'IN TRAFFIC'}
+                                        </p>
+                                    </div>
+                                    <div className="border-l border-slate-800 pl-8">
+                                        <p className="text-[10px] text-slate-500 uppercase font-extrabold mb-1 tracking-wider">PROJECTED EXIT</p>
+                                        <p className="text-sm font-black text-white italic">
+                                            {exitLabel} <span className="text-[10px] opacity-40 font-mono">vs {targetDriver}</span>
                                         </p>
                                     </div>
                                 </div>

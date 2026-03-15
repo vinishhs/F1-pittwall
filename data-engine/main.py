@@ -223,14 +223,26 @@ async def get_stints(
         if len(lap_times) < 3:
             return None
         
-        # 1. Use the last 5 valid laps to capture the most recent trend
-        recent_times = lap_times[-5:]
-        recent_laps = lap_numbers[-5:]
+        # 1. Slope stability: Filter outliers (>107% of previous lap)
+        clean_times = []
+        clean_laps = []
+        for i in range(len(lap_times)):
+            if i == 0:
+                clean_times.append(lap_times[i])
+                clean_laps.append(lap_numbers[i])
+            else:
+                if lap_times[i] <= (lap_times[i-1] * 1.07):
+                    clean_times.append(lap_times[i])
+                    clean_laps.append(lap_numbers[i])
+        
+        # 2. Use the last 5 CLEAN laps to capture the most recent trend
+        recent_times = clean_times[-5:]
+        recent_laps = clean_laps[-5:]
         
         if len(recent_times) < 3:
             return None
             
-        # 2. Linear Regression on recent laps
+        # 3. Linear Regression on recent laps
         x = np.array(recent_laps)
         y = np.array(recent_times)
         n = len(x)
