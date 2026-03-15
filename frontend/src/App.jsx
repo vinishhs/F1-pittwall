@@ -88,41 +88,40 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative overflow-hidden">
         {/* === TOP HEADER BAR === */}
-        <header className="h-14 border-b border-terminal-border grid grid-cols-[1fr_auto_1fr] items-center px-6 bg-terminal-surface backdrop-blur-xl z-20 shrink-0">
-          <div></div> {/* Left Spacer for symmetry */}
+        <header className="h-28 border-b border-terminal-border bg-terminal-surface backdrop-blur-xl z-20 shrink-0 relative">
+          {/* Status Indicators - Pinned to the top-right corner of the whole header */}
+          <div className="absolute top-6 right-6 left-auto z-30 font-mono">
+            {status === 'loading' && <span className="text-brand-crimson text-[10px] tracking-widest animate-pulse flex items-center gap-2 px-3 py-1 bg-brand-crimson/5 border border-brand-crimson/20 rounded-sm"><Zap className="w-3 h-3" /> PROCESSING_DATA</span>}
+            {status === 'success' && <span className="text-brand-cyan text-[10px] tracking-widest flex items-center gap-2 px-3 py-1 bg-brand-cyan/5 border border-brand-cyan/20 rounded-sm"><span className="w-1.5 h-1.5 rounded-full bg-brand-cyan terminal-blink shadow-[0_0_5px_#00f0ff]"></span> PITWALL_LINK_ACTIVE</span>}
+          </div>
 
-          <div className="flex items-center gap-8">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded border border-brand-cyan/50 flex items-center justify-center bg-brand-cyan/10">
-                <Activity className="w-4 h-4 text-brand-cyan" />
+          <div className="h-full w-full max-w-[1920px] mx-auto px-6 flex flex-col items-center justify-center">
+            {/* Top Level: Branding */}
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-9 h-9 rounded border border-brand-cyan/40 flex items-center justify-center bg-brand-cyan/5 shadow-[0_0_15px_rgba(0,240,255,0.05)]">
+                <Activity className="w-5 h-5 text-brand-cyan" />
               </div>
-              <h1 className="text-sm tracking-widest text-brand-cyan terminal-glow">
-                <span className="font-bold">F1</span> <span className="italic opacity-70">VIRTUAL PITWALL</span>
+              <h1 className="text-xl tracking-[0.25em] text-brand-cyan font-krona terminal-glow leading-none">
+                <span className="font-bold">F1</span> <span className="opacity-80 ml-2 uppercase">Virtual Pitwall</span>
               </h1>
             </div>
 
-            {/* Navigation Tabs */}
-            <nav className="flex items-center gap-1">
+            {/* Bottom Level: Navigation Tabs */}
+            <nav className="flex items-center gap-4">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-1.5 text-[11px] tracking-widest transition-all border-b-2 ${
+                  className={`px-8 py-2.5 text-[13px] font-titillium font-bold tracking-[0.15em] transition-all border-b-2 ${
                     activeTab === tab.id
-                      ? 'text-brand-cyan border-brand-cyan'
-                      : 'text-[#4a5568] border-transparent hover:text-[#c8d6e5] hover:border-[#4a5568]'
+                      ? 'text-brand-cyan border-brand-cyan bg-brand-cyan/5 shadow-[0_8px_15px_-8px_rgba(0,240,255,0.2)]'
+                      : 'text-[#4a5568] border-transparent hover:text-[#c8d6e5] hover:border-terminal-border/50'
                   }`}
                 >
                   {tab.label}
                 </button>
               ))}
             </nav>
-          </div>
-
-          <div className="flex items-center justify-end gap-4">
-            {status === 'loading' && <span className="text-brand-crimson text-[10px] tracking-wider animate-pulse flex items-center gap-2"><Zap className="w-3 h-3" /> PROCESSING...</span>}
-            {status === 'success' && <span className="text-brand-cyan text-[10px] tracking-wider flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-brand-cyan terminal-blink"></span> LIVE_LINK</span>}
           </div>
         </header>
 

@@ -1,14 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Krona+One&family=Titillium+Web:wght@400;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .font-krona { font-family: 'Krona One', sans-serif; }
+  .font-titillium { font-family: 'Titillium Web', sans-serif; }
+}
+
 /* ═══ TERMINAL BASE ═══ */
 body {
   background-color: #0a0e17;
   color: #c8d6e5;
-  font-family: 'Share Tech Mono', monospace;
   -webkit-font-smoothing: antialiased;
 }
 

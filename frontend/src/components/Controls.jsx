@@ -29,14 +29,14 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
                 {/* Subtle top accent line */}
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-brand-cyan/50 to-transparent"></div>
 
-                <div className="flex items-end gap-5">
+                <div className="flex items-end gap-5 font-titillium">
                     <div className="flex-1 grid grid-cols-5 gap-5">
                         {/* Year */}
                         <div className="flex flex-col gap-2">
-                            <label className="text-[10px] text-brand-cyan/80 tracking-[0.25em] font-bold">YEAR</label>
+                            <label className="text-[10px] text-brand-cyan/80 tracking-[0.3em] font-bold uppercase">YEAR</label>
                             <div className="relative">
                                 <select
-                                    className="w-full appearance-none bg-terminal-base text-[#c8d6e5] text-[13px] tracking-wider rounded-md border border-terminal-border px-3 py-2.5 outline-none focus:border-brand-cyan/60 focus:shadow-cyan-glow transition-all cursor-pointer hover:border-brand-cyan/30"
+                                    className="w-full appearance-none bg-terminal-base text-[#c8d6e5] text-[13px] tracking-widest rounded-md border border-terminal-border px-3 py-2.5 outline-none focus:border-brand-cyan/60 focus:shadow-cyan-glow transition-all cursor-pointer hover:border-brand-cyan/30 font-bold"
                                     value={params.year}
                                     onChange={(e) => setParams({ ...params, year: e.target.value })}
                                 >
@@ -50,10 +50,10 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
 
                         {/* Race */}
                         <div className="flex flex-col gap-2">
-                            <label className="text-[10px] text-brand-cyan/80 tracking-[0.25em] font-bold">GRAND_PRIX</label>
+                            <label className="text-[10px] text-brand-cyan/80 tracking-[0.3em] font-bold uppercase">GRAND_PRIX</label>
                             <div className="relative">
                                 <select
-                                    className="w-full appearance-none bg-terminal-base text-[#c8d6e5] text-[13px] tracking-wider rounded-md border border-terminal-border px-3 py-2.5 outline-none focus:border-brand-cyan/60 focus:shadow-cyan-glow transition-all cursor-pointer hover:border-brand-cyan/30"
+                                    className="w-full appearance-none bg-terminal-base text-[#c8d6e5] text-[13px] tracking-widest rounded-md border border-terminal-border px-3 py-2.5 outline-none focus:border-brand-cyan/60 focus:shadow-cyan-glow transition-all cursor-pointer hover:border-brand-cyan/30 font-bold"
                                     value={params.race}
                                     onChange={(e) => setParams({ ...params, race: e.target.value })}
                                 >
@@ -81,10 +81,10 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
 
                         {/* Session */}
                         <div className="flex flex-col gap-2">
-                            <label className="text-[10px] text-brand-cyan/80 tracking-[0.25em] font-bold">SESSION</label>
+                            <label className="text-[10px] text-brand-cyan/80 tracking-[0.3em] font-bold uppercase">SESSION</label>
                             <div className="relative">
                                 <select
-                                    className="w-full appearance-none bg-terminal-base text-[#c8d6e5] text-[13px] tracking-wider rounded-md border border-terminal-border px-3 py-2.5 outline-none focus:border-brand-cyan/60 focus:shadow-cyan-glow transition-all cursor-pointer hover:border-brand-cyan/30"
+                                    className="w-full appearance-none bg-terminal-base text-[#c8d6e5] text-[13px] tracking-widest rounded-md border border-terminal-border px-3 py-2.5 outline-none focus:border-brand-cyan/60 focus:shadow-cyan-glow transition-all cursor-pointer hover:border-brand-cyan/30 font-bold"
                                     value={params.session}
                                     onChange={(e) => setParams({ ...params, session: e.target.value })}
                                 >
@@ -99,10 +99,10 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
 
                         {/* Driver Alpha */}
                         <div className="flex flex-col gap-2">
-                            <label className="text-[10px] text-brand-cyan tracking-[0.25em] font-bold">DRIVER_ALPHA</label>
+                            <label className="text-[10px] text-brand-cyan tracking-[0.3em] font-bold uppercase">DRIVER_ALPHA</label>
                             <div className="relative">
                                 <select
-                                    className="w-full appearance-none bg-brand-cyan/5 text-brand-cyan text-[15px] font-bold tracking-widest rounded-md border border-brand-cyan/30 px-3 py-2.5 outline-none focus:border-brand-cyan focus:shadow-cyan-glow transition-all cursor-pointer hover:bg-brand-cyan/10"
+                                    className="w-full appearance-none bg-brand-cyan/5 text-brand-cyan text-[13px] font-bold tracking-[0.2em] rounded-md border border-brand-cyan/30 px-3 py-2.5 outline-none focus:border-brand-cyan focus:shadow-cyan-glow transition-all cursor-pointer hover:bg-brand-cyan/10"
                                     value={params.driver1}
                                     onChange={(e) => setParams({ ...params, driver1: e.target.value })}
                                 >
@@ -122,10 +122,10 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
 
                         {/* Driver Bravo */}
                         <div className="flex flex-col gap-2">
-                            <label className="text-[10px] text-brand-crimson tracking-[0.25em] font-bold">DRIVER_BRAVO</label>
+                            <label className="text-[10px] text-brand-crimson tracking-[0.3em] font-bold uppercase">DRIVER_BRAVO</label>
                             <div className="relative">
                                 <select
-                                    className="w-full appearance-none bg-brand-crimson/5 text-brand-crimson text-[15px] font-bold tracking-widest rounded-md border border-brand-crimson/30 px-3 py-2.5 outline-none focus:border-brand-crimson focus:shadow-crimson-glow transition-all cursor-pointer hover:bg-brand-crimson/10"
+                                    className="w-full appearance-none bg-brand-crimson/5 text-brand-crimson text-[13px] font-bold tracking-[0.2em] rounded-md border border-brand-crimson/30 px-3 py-2.5 outline-none focus:border-brand-crimson focus:shadow-crimson-glow transition-all cursor-pointer hover:bg-brand-crimson/10"
                                     value={params.driver2}
                                     onChange={(e) => setParams({ ...params, driver2: e.target.value })}
                                 >
@@ -148,10 +148,10 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
                     <button
                         onClick={handleAnalyze}
                         disabled={status === 'loading'}
-                        className="h-[44px] px-8 bg-brand-cyan text-terminal-base font-bold rounded-md flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[13px] tracking-[0.3em] hover:shadow-cyan-glow hover:scale-[1.02] active:scale-95 shrink-0"
+                        className="h-[44px] px-8 bg-brand-cyan text-terminal-base font-bold rounded-md flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[15px] tracking-[0.4em] hover:shadow-cyan-glow hover:scale-[1.02] active:scale-95 shrink-0"
                     >
                         {status === 'loading' ? (
-                            <span className="tracking-widest animate-pulse">WAIT</span>
+                            <span className="animate-pulse">WAIT</span>
                         ) : (
                             <span>RUN</span>
                         )}
