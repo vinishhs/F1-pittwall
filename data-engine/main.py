@@ -40,6 +40,12 @@ async def get_telemetry(
                 # pandas Timedelta to string usually gives "0 days 00:01:25.123000"
                 # We want "1:25.123"
                 lap_time = fastest_lap['LapTime']
+                
+                # Extract Tyre Data with Fallbacks
+                compound = str(fastest_lap['Compound']) if pd.notnull(fastest_lap['Compound']) else "UNKNOWN"
+                tyre_life = int(fastest_lap['TyreLife']) if pd.notnull(fastest_lap['TyreLife']) else 0
+                tire_info = {"compound": compound, "life": tyre_life}
+                
                 # Convert to string, remove "0 days " if present
                 lt_str = str(lap_time).split('days')[-1].strip()
                 # If it has microseconds, slice to 3 decimals (MS.nnn)
@@ -86,14 +92,49 @@ async def get_telemetry(
                 # FastF1 DRS is usually 0, 8, 10, 12 etc. We'll simplify: >0 is Straight Mode
                 telemetry['aero_mode'] = (telemetry['DRS'] > 0).astype(int)
                 
-                return telemetry, lt_str
+                return telemetry, lt_str, tire_info
             except Exception as e:
                 # Log error but don't crash main flow if one driver fails? 
                 # Actually we should raise to alert user
                 raise ValueError(f"Error fetching data for {driver_code}: {str(e)}")
 
-        d1_tel, d1_best = get_driver_telemetry(driver1)
-        d2_tel, d2_best = get_driver_telemetry(driver2)
+        d1_tel, d1_best, d1_tire = get_driver_telemetry(driver1)
+        d2_tel, d2_best, d2_tire = get_driver_telemetry(driver2)
+        
+        # --- PACE DECAY LOGIC (Stint Averages) ---
+        def get_pace_decay(driver_code):
+            try:
+                laps = f1_session.laps.pick_driver(driver_code)
+                if laps.empty or 'Stint' not in laps.columns:
+                    return []
+                
+                decay_data = []
+                for stint_id, stint_data in laps.groupby('Stint'):
+                    # Filter out out/in laps dynamically (using IsAccurate or simple bounds)
+                    # For a robust proxy, we just take the mean of valid lap times
+                    valid_laps = stint_data.dropna(subset=['LapTime'])
+                    if valid_laps.empty:
+                        continue
+                        
+                    stint_avg = valid_laps['LapTime'].mean().total_seconds()
+                    compound = str(valid_laps['Compound'].mode().iloc[0]) if not valid_laps['Compound'].empty else "UNKNOWN"
+                    start_life = int(valid_laps['TyreLife'].min()) if pd.notnull(valid_laps['TyreLife'].min()) else 0
+                    end_life = int(valid_laps['TyreLife'].max()) if pd.notnull(valid_laps['TyreLife'].max()) else 0
+                    
+                    decay_data.append({
+                        "stint": int(stint_id),
+                        "compound": compound,
+                        "start_life": start_life,
+                        "end_life": end_life,
+                        "avg_pace_sec": round(stint_avg, 3)
+                    })
+                return decay_data
+            except Exception as e:
+                print(f"Pace Decay Error for {driver_code}: {e}")
+                return []
+                
+        d1_pace_decay = get_pace_decay(driver1)
+        d2_pace_decay = get_pace_decay(driver2)
 
         # Determine the maximum common distance
         # We take the minimum of the two total distances to ensure data exists for both
@@ -149,7 +190,11 @@ async def get_telemetry(
             "d1": d1_interp,
             "d2": d2_interp,
             "d1_best": d1_best,
-            "d2_best": d2_best
+            "d2_best": d2_best,
+            "d1_tire": d1_tire,
+            "d2_tire": d2_tire,
+            "d1_pace_decay": d1_pace_decay,
+            "d2_pace_decay": d2_pace_decay
         }
 
         return JSONResponse(content=response_data)

@@ -6,11 +6,11 @@ import TrackMap from './components/TrackMap';
 import HistoryGallery from './components/HistoryGallery';
 import SectorChart from './components/SectorChart';
 import StatsCard from './components/StatsCard'; // Added missing import
-import { Activity, Zap, Timer, Map, Archive, BarChart2 } from 'lucide-react';
+import { Activity, Zap, Timer, Map, Archive, BarChart2, Layers } from 'lucide-react';
 import client from './api/client';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('analysis'); // 'analysis' | 'garage'
+  const [activeTab, setActiveTab] = useState('analysis'); // 'analysis' | 'garage' | 'strategy'
 
   const [telemetryData, setTelemetryData] = useState(null);
   const [sectorData, setSectorData] = useState(null); // New State for Sectors
@@ -112,6 +112,13 @@ export default function App() {
                 Analysis
               </button>
               <button
+                onClick={() => setActiveTab('strategy')}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'strategy' ? 'bg-brand-red text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+              >
+                <Layers className="w-4 h-4" />
+                Strategy
+              </button>
+              <button
                 onClick={() => setActiveTab('garage')}
                 className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === 'garage' ? 'bg-brand-red text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
               >
@@ -138,6 +145,22 @@ export default function App() {
             // --- GARAGE VIEW ---
             <div className="flex-1 animate-in slide-in-from-right-4 duration-300">
               <HistoryGallery onLoad={handleLoadHistory} />
+            </div>
+          ) : activeTab === 'strategy' ? (
+            // --- STRATEGY VIEW (Phase 1 Placeholder) ---
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 animate-in fade-in duration-500">
+                <Layers className="w-20 h-20 mb-6 text-brand-red/50 animate-pulse" />
+                <h2 className="text-3xl font-black text-white tracking-widest uppercase mb-4 shadow-sm text-center">
+                    Tire Degradation Analysis
+                </h2>
+                <div className="flex items-center gap-3 px-6 py-3 bg-slate-900 border border-slate-700/50 rounded-lg text-slate-400 font-mono tracking-widest text-sm">
+                    <Zap className="w-5 h-5 text-cyan-400" />
+                    STATUS: [COMING SOON]
+                </div>
+                <p className="mt-8 text-center max-w-md italic opacity-80 leading-relaxed text-sm">
+                    Phase 1 Stint Pacing Logic is running locally in the Data Engine.<br/>
+                    Frontend Visualization Modules are currently locked for 2026.
+                </p>
             </div>
           ) : (
             // --- ANALYSIS DASHBOARD VIEW ---
