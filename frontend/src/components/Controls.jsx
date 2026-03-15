@@ -22,15 +22,16 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
         }
     };
 
+    const selectClasses = "w-full bg-terminal-base text-[#c8d6e5] text-[12px] tracking-wider rounded border border-terminal-border p-2.5 outline-none focus:border-brand-cyan/50 focus:shadow-cyan-glow transition-all";
+
     return (
-        <div className="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-xl flex items-center gap-4">
-            {/* Simple Horizontal Layout for Controls in Phase 5 */}
+        <div className="terminal-card rounded-lg p-4 flex items-end gap-4">
             <div className="flex-1 grid grid-cols-5 gap-4">
                 {/* Year */}
                 <div className="flex flex-col">
-                    <label className="text-[10px] text-slate-500 font-bold uppercase mb-1">Year</label>
+                    <label className="text-[9px] text-[#4a5568] tracking-[0.2em] mb-1.5">YEAR</label>
                     <select
-                        className="bg-slate-800 text-white text-sm rounded border border-slate-700 p-2 outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red"
+                        className={selectClasses}
                         value={params.year}
                         onChange={(e) => setParams({ ...params, year: e.target.value })}
                     >
@@ -41,10 +42,10 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
                 </div>
 
                 {/* Race */}
-                <div className="flex flex-col col-span-1">
-                    <label className="text-[10px] text-slate-500 font-bold uppercase mb-1">Grand Prix</label>
+                <div className="flex flex-col">
+                    <label className="text-[9px] text-[#4a5568] tracking-[0.2em] mb-1.5">GRAND PRIX</label>
                     <select
-                        className="bg-slate-800 text-white text-sm rounded border border-slate-700 p-2 outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red"
+                        className={selectClasses}
                         value={params.race}
                         onChange={(e) => setParams({ ...params, race: e.target.value })}
                     >
@@ -70,9 +71,9 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
 
                 {/* Session */}
                 <div className="flex flex-col">
-                    <label className="text-[10px] text-slate-500 font-bold uppercase mb-1">Session</label>
+                    <label className="text-[9px] text-[#4a5568] tracking-[0.2em] mb-1.5">SESSION</label>
                     <select
-                        className="bg-slate-800 text-white text-sm rounded border border-slate-700 p-2 outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red"
+                        className={selectClasses}
                         value={params.session}
                         onChange={(e) => setParams({ ...params, session: e.target.value })}
                     >
@@ -83,11 +84,11 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
                     </select>
                 </div>
 
-                {/* Driver 1 */}
+                {/* Driver Alpha */}
                 <div className="flex flex-col">
-                    <label className="text-[10px] text-cyan-500 font-bold uppercase mb-1">Driver 1 (Ref)</label>
+                    <label className="text-[9px] text-brand-cyan/70 tracking-[0.2em] mb-1.5">DRIVER_ALPHA</label>
                     <select
-                        className="bg-slate-800 text-cyan-400 font-bold text-sm rounded border border-slate-700 p-2 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                        className={`${selectClasses} !text-brand-cyan !border-brand-cyan/30`}
                         value={params.driver1}
                         onChange={(e) => setParams({ ...params, driver1: e.target.value })}
                     >
@@ -103,11 +104,11 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
                     </select>
                 </div>
 
-                {/* Driver 2 */}
+                {/* Driver Bravo */}
                 <div className="flex flex-col">
-                    <label className="text-[10px] text-red-500 font-bold uppercase mb-1">Driver 2 (Tar)</label>
+                    <label className="text-[9px] text-brand-crimson/70 tracking-[0.2em] mb-1.5">DRIVER_BRAVO</label>
                     <select
-                        className="bg-slate-800 text-red-400 font-bold text-sm rounded border border-slate-700 p-2 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                        className={`${selectClasses} !text-brand-crimson !border-brand-crimson/30`}
                         value={params.driver2}
                         onChange={(e) => setParams({ ...params, driver2: e.target.value })}
                     >
@@ -124,29 +125,26 @@ export default function Controls({ onAnalyze, status, errorMsg, initialParams })
                 </div>
             </div>
 
-            {/* Action Button */}
-            <div className="w-40 flex flex-col justify-end">
+            {/* RUN Button */}
+            <div className="w-28 flex flex-col justify-end">
                 <button
                     onClick={handleAnalyze}
                     disabled={status === 'loading'}
-                    className="w-full h-[42px] bg-brand-red hover:bg-red-600 text-white font-bold rounded flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-900/20 text-sm"
+                    className="w-full h-[42px] bg-brand-cyan text-terminal-base font-bold rounded flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[12px] tracking-widest hover:shadow-cyan-glow active:scale-95"
                 >
                     {status === 'loading' ? (
-                        <span>Loading...</span>
+                        <span className="tracking-widest">WAIT...</span>
                     ) : (
-                        <>
-                            <PlayCircle className="w-4 h-4" />
-                            <span>Analyze</span>
-                        </>
+                        <span>RUN</span>
                     )}
                 </button>
             </div>
 
-            {/* Error Message */}
+            {/* Error Toast */}
             {status === 'error' && (
-                <div className="fixed top-24 right-6 z-50 p-4 bg-red-900/90 border border-red-500 rounded shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 backdrop-blur-md">
-                    <AlertTriangle className="w-5 h-5 text-red-200" />
-                    <span className="text-white font-medium text-sm">{errorMsg}</span>
+                <div className="fixed top-14 right-6 z-50 p-3 bg-brand-crimson/20 border border-brand-crimson/50 rounded flex items-center gap-3 animate-in fade-in slide-in-from-top-4 backdrop-blur-md">
+                    <AlertTriangle className="w-4 h-4 text-brand-crimson" />
+                    <span className="text-brand-crimson text-[11px] tracking-wider">{errorMsg}</span>
                 </div>
             )}
         </div>

@@ -7,15 +7,23 @@ export default {
     theme: {
         extend: {
             colors: {
-                slate: {
-                    850: '#151e2e',
-                    900: '#0f172a',
-                    950: '#020617',
+                terminal: {
+                    base: '#0a0e17',
+                    surface: '#0d1117',
+                    elevated: '#151c28',
+                    border: '#1a2332',
                 },
                 brand: {
-                    red: '#ef4444',
-                    cyan: '#06b6d4',
-                }
+                    cyan: '#00f0ff',
+                    crimson: '#e53935',
+                },
+            },
+            fontFamily: {
+                mono: ['"Share Tech Mono"', 'monospace'],
+            },
+            boxShadow: {
+                'cyan-glow': '0 0 15px rgba(0, 240, 255, 0.15), 0 0 30px rgba(0, 240, 255, 0.05)',
+                'crimson-glow': '0 0 15px rgba(229, 57, 53, 0.15), 0 0 30px rgba(229, 57, 53, 0.05)',
             },
         },
     },

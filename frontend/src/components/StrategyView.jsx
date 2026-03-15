@@ -5,7 +5,7 @@ import client from '../api/client';
 
 export default function StrategyView({ loadedParams }) {
     const [stintData, setStintData] = useState([]);
-    const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
+    const [status, setStatus] = useState('idle');
     const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
@@ -34,17 +34,16 @@ export default function StrategyView({ loadedParams }) {
         const rects = [];
         const strategies = [];
         
-        const d1Color = '#06b6d4'; // Cyan
-        const d2Color = '#ef4444'; // Red
+        const d1Color = '#00f0ff';
+        const d2Color = '#e53935';
 
         stintData.forEach((stint) => {
             const isD1 = loadedParams && stint.Driver === loadedParams.driver1;
             const baseColor = isD1 ? d1Color : d2Color;
             
-            // Marker coloring logic
             const markerColors = stint.LapTimes.map(t => {
                 const delta = t - stint.BasePace;
-                if (delta > 3.0) return '#ea580c'; 
+                if (delta > 3.0) return '#e53935'; 
                 if (delta > 1.5) return '#eab308'; 
                 return baseColor;
             });
@@ -56,7 +55,6 @@ export default function StrategyView({ loadedParams }) {
                 return 4;
             });
             
-            // Compound line and marker styling
             let dashStyle = 'solid';
             let markerSymbol = 'circle';
             if (stint.Compound === 'MEDIUM') {
@@ -83,7 +81,7 @@ export default function StrategyView({ loadedParams }) {
                     color: markerColors,
                     size: markerSizes,
                     line: {
-                        color: '#000000',
+                        color: '#0a0e17',
                         width: 1
                     }
                 },
@@ -97,7 +95,6 @@ export default function StrategyView({ loadedParams }) {
                 connectgaps: false
             });
 
-            // Handle Strategy Shapes (Phase 3)
             if (stint.Strategy) {
                 rects.push({
                     type: 'rect',
@@ -107,8 +104,8 @@ export default function StrategyView({ loadedParams }) {
                     x1: stint.Strategy.PitWindowEnd,
                     y0: 0,
                     y1: 1,
-                    fillcolor: 'rgba(0, 255, 100, 0.1)',
-                    line: { width: 0 }
+                    fillcolor: 'rgba(0, 240, 255, 0.08)',
+                    line: { width: 1, color: 'rgba(0, 240, 255, 0.25)', dash: 'dot' }
                 });
                 strategies.push({
                     driver: stint.Driver,
@@ -125,54 +122,60 @@ export default function StrategyView({ loadedParams }) {
 
     if (!loadedParams) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 animate-in fade-in duration-500">
+            <div className="flex-1 flex flex-col items-center justify-center text-[#4a5568] animate-in fade-in duration-500">
                 <Layers className="w-16 h-16 mb-4 opacity-20" />
-                <p className="text-lg font-light">Select race parameters and analyze to view strategy.</p>
+                <p className="text-sm tracking-wider">SELECT RACE PARAMETERS TO INITIALIZE_</p>
             </div>
         );
     }
 
     if (status === 'loading') {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 animate-in fade-in duration-500">
-                <div className="w-12 h-12 border-4 border-slate-700 border-t-cyan-500 rounded-full animate-spin mb-4"></div>
-                <p className="animate-pulse">Loading Stint History...</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-[#4a5568] animate-in fade-in duration-500">
+                <div className="w-12 h-12 border-2 border-terminal-border border-t-brand-cyan rounded-full animate-spin mb-4"></div>
+                <p className="animate-pulse text-[11px] tracking-widest">LOADING_STINT_HISTORY...</p>
             </div>
         );
     }
 
     if (status === 'error') {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center text-red-500">
+            <div className="flex-1 flex flex-col items-center justify-center text-brand-crimson">
                 <AlertTriangle className="w-12 h-12 mb-4" />
-                <p className="font-bold">{errorMsg}</p>
+                <p className="text-[11px] tracking-wider">{errorMsg}</p>
             </div>
         );
     }
 
     return (
         <div className="flex-1 flex flex-col animate-in slide-in-from-bottom-4 duration-500 max-h-full">
+            {/* Header */}
             <div className="flex items-center justify-between mb-4 px-2">
-                <div>
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Layers className="w-6 h-6 text-brand-red" />
-                        Tire Degradation Overview
-                    </h2>
-                    <p className="text-sm text-slate-400">Lap-over-lap pace falloff and stint longevity.</p>
+                <div className="flex items-center gap-4">
+                    <div className="w-1 h-6 bg-brand-crimson"></div>
+                    <div>
+                        <h2 className="text-[13px] tracking-widest text-[#c8d6e5]">
+                            STRATEGY & TIRE LIFECYCLE
+                        </h2>
+                        <p className="text-[10px] text-[#4a5568] tracking-wider mt-0.5">COMPARATIVE ANALYSIS: LAP TIME DELTA (S) VS TOTAL LAPS</p>
+                    </div>
+                    <div className="px-2 py-0.5 bg-brand-crimson/20 text-brand-crimson text-[9px] tracking-wider rounded border border-brand-crimson/30 terminal-blink">
+                        ● LIVE DATA
+                    </div>
                 </div>
-                <div className="flex gap-4 text-xs font-mono text-slate-400 bg-slate-900 border border-slate-800 p-2 rounded shadow-lg">
-                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-cyan-500"></div>{loadedParams.driver1} (Base)</div>
-                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500"></div>{loadedParams.driver2} (Target)</div>
-                    <div className="flex items-center gap-2 ml-4 border-l border-slate-800 pl-4"><div className="w-3 h-3 rounded-full bg-yellow-500"></div>&gt; 1.5s Drop</div>
-                    <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-600"></div>&gt; 3.0s Cliff</div>
+                <div className="flex gap-6 text-[10px] text-[#4a5568] tracking-wider">
+                    <span className="flex items-center gap-2">── SOFT (S)</span>
+                    <span className="flex items-center gap-2">- - MEDIUM (M)</span>
+                    <span className="flex items-center gap-2">··· HARD (H)</span>
                 </div>
             </div>
 
-            <div className="flex-1 bg-slate-900/50 border border-slate-800 rounded-lg p-2 min-h-0 relative mb-4 shadow-2xl backdrop-blur-sm">
+            {/* Chart */}
+            <div className="flex-1 bg-terminal-surface border border-terminal-border rounded-lg p-2 min-h-0 relative mb-4">
                 {stintData.length === 0 ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-[#4a5568]">
                         <AlertCircle className="w-12 h-12 mb-2 opacity-50" />
-                        <p>No valid stint data found for this session.</p>
+                        <p className="text-[11px] tracking-wider">NO_VALID_STINT_DATA</p>
                     </div>
                 ) : (
                     <Plot
@@ -182,23 +185,24 @@ export default function StrategyView({ loadedParams }) {
                             paper_bgcolor: 'rgba(0,0,0,0)',
                             plot_bgcolor: 'rgba(0,0,0,0)',
                             margin: { t: 20, b: 40, l: 50, r: 20 },
+                            font: { family: 'Share Tech Mono' },
                             xaxis: {
-                                title: { text: "Lap Number", font: { color: "#64748b" } },
-                                tickfont: { color: "#64748b" },
-                                gridcolor: "#1e293b",
+                                title: { text: "LAP NUMBER", font: { color: "#4a5568", family: "Share Tech Mono" } },
+                                tickfont: { color: "#4a5568", family: "Share Tech Mono" },
+                                gridcolor: "#1a2332",
                                 dtick: 5
                             },
                             yaxis: {
-                                title: { text: "Lap Time (s)", font: { color: "#64748b" } },
-                                tickfont: { color: "#64748b" },
-                                gridcolor: "#1e293b",
+                                title: { text: "LAP TIME (S)", font: { color: "#4a5568", family: "Share Tech Mono" } },
+                                tickfont: { color: "#4a5568", family: "Share Tech Mono" },
+                                gridcolor: "#1a2332",
                                 dtick: 1
                             },
                             showlegend: true,
                             legend: {
                                 orientation: 'h',
                                 y: 1.1,
-                                font: { color: "#cbd5e1" }
+                                font: { color: "#4a5568", family: "Share Tech Mono", size: 10 }
                             },
                             hovermode: 'closest',
                             shapes: shapes
@@ -210,49 +214,74 @@ export default function StrategyView({ loadedParams }) {
                 )}
             </div>
 
-            {/* Strategy Insight Card (Phase 3) */}
+            {/* Strategy Insight Cards */}
             {strategyInfo.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-bottom-12 duration-1000 ease-out fill-mode-forwards">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in slide-in-from-bottom-12 duration-1000 ease-out">
                     {strategyInfo.map((info, idx) => {
-                        const isClear = Math.abs(info.exitDelta) > 2.0;
-                        const exitLabel = info.exitDelta >= 0 ? `+${info.exitDelta}s ahead` : `${Math.abs(info.exitDelta)}s behind`;
+                        const isClear = info.exitDelta == null || Math.abs(info.exitDelta) > 2.0;
+                        const exitLabel = info.exitDelta != null
+                            ? (info.exitDelta >= 0 ? `+${info.exitDelta}s ahead` : `${Math.abs(info.exitDelta)}s behind`)
+                            : 'N/A';
                         const targetDriver = loadedParams.driver1 === info.driver ? loadedParams.driver2 : loadedParams.driver1;
 
                         return (
-                            <div key={idx} className="bg-slate-900/80 backdrop-blur-xl border-l-4 border-l-green-500 rounded-r-lg p-4 border border-slate-800 shadow-2xl hover:bg-slate-800 transition-all duration-300">
+                            <div key={idx} className="terminal-card rounded-lg p-4 border-l-2 border-l-brand-cyan hover:bg-terminal-elevated transition-all duration-300">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                                        STRATEGY INSIGHT: <span style={{ color: info.color }}>{info.driver}</span>
+                                    <h3 className="text-[10px] text-[#4a5568] tracking-widest">
+                                        STRATEGY INSIGHT
                                     </h3>
-                                    <div className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded text-[9px] font-bold border border-green-500/20 animate-pulse tracking-tighter">
-                                        PREDICTION ACTIVE
-                                    </div>
+                                    <span style={{ color: info.color }} className="text-[11px] tracking-wider">{info.driver}</span>
                                 </div>
-                                <div className="flex items-center gap-8">
-                                    <div>
-                                        <p className="text-[10px] text-slate-500 uppercase font-extrabold mb-1 tracking-wider">RECOMMENDED WINDOW</p>
-                                        <p className="text-2xl font-black text-white leading-none">LAPS {info.start} — {info.end}</p>
-                                    </div>
-                                    <div className="border-l border-slate-800 pl-8">
-                                        <p className="text-[10px] text-slate-500 uppercase font-extrabold mb-1 tracking-wider">TRAFFIC</p>
-                                        <p className={`text-sm font-bold ${isClear ? 'text-green-400' : 'text-orange-400'}`}>
-                                            {isClear ? 'CLEAR' : 'IN TRAFFIC'}
-                                        </p>
-                                    </div>
-                                    <div className="border-l border-slate-800 pl-8">
-                                        <p className="text-[10px] text-slate-500 uppercase font-extrabold mb-1 tracking-wider">PROJECTED EXIT</p>
-                                        <p className="text-sm font-black text-white italic">
-                                            {exitLabel} <span className="text-[10px] opacity-40 font-mono">vs {targetDriver}</span>
-                                        </p>
-                                    </div>
+                                <div>
+                                    <p className="text-[9px] text-[#4a5568] tracking-widest mb-1">RECOMMENDED WINDOW</p>
+                                    <p className="text-xl text-brand-cyan terminal-glow tracking-wider">LAPS {info.start}—{info.end}</p>
                                 </div>
                             </div>
                         );
                     })}
+                    
+                    {/* Traffic Analysis Card */}
+                    {strategyInfo[0] && (
+                        <div className="terminal-card rounded-lg p-4 border-l-2 border-l-brand-crimson hover:bg-terminal-elevated transition-all duration-300">
+                            <h3 className="text-[10px] text-[#4a5568] tracking-widest mb-3">TRAFFIC ANALYSIS</h3>
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] text-[#4a5568] tracking-wider">CURRENT STATUS</span>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded tracking-wider ${
+                                        (strategyInfo[0].exitDelta == null || Math.abs(strategyInfo[0].exitDelta) > 2.0)
+                                            ? 'bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30'
+                                            : 'bg-brand-crimson/20 text-brand-crimson border border-brand-crimson/30'
+                                    }`}>
+                                        {(strategyInfo[0].exitDelta == null || Math.abs(strategyInfo[0].exitDelta) > 2.0) ? 'CLEAR AIR' : 'IN TRAFFIC'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] text-[#4a5568] tracking-wider">PIT EXIT (EST)</span>
+                                    <span className="text-[10px] px-2 py-0.5 rounded tracking-wider bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30">
+                                        CLEAR AIR
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Track Position Delta Card */}
+                    {strategyInfo[0] && (
+                        <div className="terminal-card rounded-lg p-4 border-l-2 border-l-yellow-500 hover:bg-terminal-elevated transition-all duration-300">
+                            <h3 className="text-[10px] text-[#4a5568] tracking-widest mb-1">TRACK POSITION DELTA</h3>
+                            <p className="text-[9px] text-[#4a5568] tracking-wider mb-3">
+                                VS {loadedParams.driver2} (TARGET)
+                            </p>
+                            <p className="text-2xl text-brand-crimson tracking-wider">
+                                {strategyInfo[0].exitDelta != null ? (
+                                    <>{strategyInfo[0].exitDelta >= 0 ? '+' : '-'}{Math.abs(strategyInfo[0].exitDelta).toFixed(1)}s</>
+                                ) : 'N/A'}
+                                <span className="text-[10px] text-brand-crimson/60 ml-2">BEHIND</span>
+                            </p>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
     );
 }
-
-
