@@ -1,7 +1,7 @@
 import React from 'react';
 import Plot from 'react-plotly.js';
 
-export default function TelemetryCharts({ data, onHover }) {
+export default function TelemetryCharts({ data, onHover, hoverIndex }) {
     if (!data) return null;
 
     const { distance, d1, d2, delta } = data;
@@ -85,13 +85,47 @@ export default function TelemetryCharts({ data, onHover }) {
         yaxis: 'y4'
     };
 
+    // 5. Energy (Subplot 5)
+    // Conditional Coloring for Energy (Green for Recharge, Red for Boost)
+    const getEnergyColors = (driverData) => {
+        return driverData.Throttle.map((t, i) => {
+            if (t > 95) return '#ef4444'; // Red (Boost)
+            if (driverData.Brake[i] > 0) return '#22c55e'; // Green (Recharge)
+            return '#94a3b8'; // Slate 400 (Neutral)
+        });
+    };
+
+    const traceEnergyD1 = {
+        x: distance,
+        y: d1.Energy,
+        name: 'D1 Energy',
+        type: 'scatter',
+        mode: 'lines+markers',
+        marker: { color: getEnergyColors(d1), size: 1 },
+        line: { color: '#06b6d4', width: 1.5, shape: 'spline' },
+        xaxis: 'x',
+        yaxis: 'y5'
+    };
+    const traceEnergyD2 = {
+        x: distance,
+        y: d2.Energy,
+        name: 'D2 Energy',
+        type: 'scatter',
+        mode: 'lines+markers',
+        marker: { color: getEnergyColors(d2), size: 1 },
+        line: { color: '#ef4444', width: 1.5, shape: 'spline' },
+        xaxis: 'x',
+        yaxis: 'y5'
+    };
+
     const layout = {
-        grid: { rows: 4, columns: 1, pattern: 'independent' },
-        height: 800,
+        grid: { rows: 5, columns: 1, pattern: 'independent' },
+        height: 900,
         paper_bgcolor: '#0f172a', // Slate 900
         plot_bgcolor: '#0f172a',
         font: { color: '#e2e8f0' },
-        showlegend: true,
+        margin: { t: 50, b: 50, l: 60, r: 20 },
+        showlegend: false,
         hovermode: 'x unified',
 
         // Axes Configuration
@@ -99,59 +133,80 @@ export default function TelemetryCharts({ data, onHover }) {
             title: 'Distance (m)',
             showgrid: false,
             zeroline: false,
-            rangeslider: { visible: false } // Disable generic rangeslider
+            rangeslider: { visible: false }
         },
 
         yaxis: {
             title: 'Delta (s)',
-            domain: [0.77, 1], // Top 23%
+            domain: [0.84, 1.0], // Top 16%
             zeroline: true,
             zerolinecolor: '#475569'
         },
         yaxis2: {
             title: 'Speed (km/h)',
-            domain: [0.52, 0.75],
-            matches: 'y2'
+            domain: [0.64, 0.81]
         },
         yaxis3: {
             title: 'Throttle (%)',
-            domain: [0.27, 0.50],
+            domain: [0.44, 0.61],
             range: [0, 105]
         },
         yaxis4: {
             title: 'Brake',
-            domain: [0, 0.25]
+            domain: [0.24, 0.41]
+        },
+        yaxis5: {
+            title: 'Energy (%)',
+            domain: [0, 0.17],
+            range: [0, 105]
         },
 
-        // Sync Zooming (Crucial: allxaxis matches 'x')
-        // Actually in Plotly Independent Axes, we just share the same xaxis anchor
-        // or we use matches: 'x' if using multiple xaxes. 
-        // Here we use one 'xaxis' for all y-axes implies they are already shared.
-        // But to be explicit for all subplots:
         xaxis2: { matches: 'x', overlaying: 'x', showticklabels: false },
         xaxis3: { matches: 'x', overlaying: 'x', showticklabels: false },
-        xaxis4: { matches: 'x', overlaying: 'x', showticklabels: false }
+        xaxis4: { matches: 'x', overlaying: 'x', showticklabels: false },
+        xaxis5: { matches: 'x', overlaying: 'x', showticklabels: false }
     };
 
+    // Aero Indicator Determination
+    const getAeroProps = (drs) => {
+        if (drs === 1) return { text: 'X-MODE: STRAIGHT', color: 'text-brand-cyan bg-brand-cyan/10 border-brand-cyan/30' };
+        return { text: 'Z-MODE: CORNER', color: 'text-purple-400 bg-purple-400/10 border-purple-400/30' };
+    };
+
+    // For 2026 Regulations: Determine Aero mode based on hover position or default to start
+    const currentIdx = hoverIndex !== null ? hoverIndex : 0;
+    const aeroValue = d1.DRS_Mapped ? d1.DRS_Mapped[currentIdx] : (d2.DRS_Mapped ? d2.DRS_Mapped[currentIdx] : 0);
+    const props = getAeroProps(aeroValue);
+
     return (
-        <div className="w-full h-full bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-xl overflow-hidden">
-            <Plot
-                data={[
-                    traceDelta,
-                    traceSpeedD1, traceSpeedD2,
-                    traceThrottleD1, traceThrottleD2,
-                    traceBrakeD1, traceBrakeD2
-                ]}
-                layout={layout}
-                useResizeHandler={true}
-                style={{ width: "100%", height: "100%" }}
-                config={{ responsive: true, displayModeBar: false }}
-                onHover={(e) => {
-                    if (onHover && e.points && e.points.length > 0) {
-                        onHover(e.points[0].pointIndex);
-                    }
-                }}
-            />
+        <div className="w-full h-full bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center mb-2 px-2">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">2026 Aero Control</div>
+                <div className={`px-3 py-1 rounded-full border text-[10px] font-black transition-all duration-300 ${props.color}`}>
+                    {props.text}
+                </div>
+            </div>
+            
+            <div className="flex-1 min-h-[800px]">
+                <Plot
+                    data={[
+                        traceDelta,
+                        traceSpeedD1, traceSpeedD2,
+                        traceThrottleD1, traceThrottleD2,
+                        traceBrakeD1, traceBrakeD2,
+                        traceEnergyD1, traceEnergyD2
+                    ]}
+                    layout={layout}
+                    useResizeHandler={true}
+                    style={{ width: "100%", height: "100%" }}
+                    config={{ responsive: true, displayModeBar: false }}
+                    onHover={(e) => {
+                        if (onHover && e.points && e.points.length > 0) {
+                            onHover(e.points[0].pointIndex);
+                        }
+                    }}
+                />
+            </div>
         </div>
     );
 }

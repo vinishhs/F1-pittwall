@@ -60,6 +60,29 @@ async def get_telemetry(
 
                 # add_distance() is crucial for the x-axis
                 telemetry = fastest_lap.get_telemetry().add_distance()
+                
+                # --- 2026 Upgrade: Energy & Aero Mapping ---
+                # Attempt to calculate SoC (State of Charge)
+                # Logic: Start 100%, -0.5% per sec at Boost (>95% throttle), +0.3% per sec at Recharge (Braking)
+                soc = [100.0]
+                dt = telemetry['Time'].dt.total_seconds().diff().fillna(0).values
+                throttles = telemetry['Throttle'].values
+                brakes = telemetry['Brake'].values
+                
+                for i in range(1, len(dt)):
+                    current_soc = soc[-1]
+                    if throttles[i] > 95: # Manual Override / Boost
+                        current_soc -= 0.5 * dt[i]
+                    elif brakes[i] > 0: # Recovery
+                        current_soc += 0.3 * dt[i]
+                    soc.append(max(0, min(100, current_soc)))
+                
+                telemetry['Energy'] = soc
+                
+                # Map DRS to X/Z Mode (1: Straight/Open -> 1, 0: Corner/Closed -> 0)
+                # FastF1 DRS is usually 0, 8, 10, 12 etc. We'll simplify: >0 is Straight Mode
+                telemetry['DRS_Mapped'] = (telemetry['DRS'] > 0).astype(int)
+                
                 return telemetry, lt_str
             except Exception as e:
                 # Log error but don't crash main flow if one driver fails? 
@@ -79,7 +102,7 @@ async def get_telemetry(
         # Interpolation function
         def interpolate_telemetry(source_data):
             # We interpolate these columns
-            columns_to_interp = ['Speed', 'Throttle', 'Brake', 'X', 'Y']
+            columns_to_interp = ['Speed', 'Throttle', 'Brake', 'X', 'Y', 'Energy', 'DRS_Mapped']
             result = {}
             
             # Ensure the source is sorted by distance
@@ -88,6 +111,9 @@ async def get_telemetry(
             
             # Interpolate Data Columns
             for col in columns_to_interp:
+                if col not in source_sorted.columns:
+                    result[col] = [0.0] * 500
+                    continue
                 y_vals = source_sorted[col].values
                 interp_vals = np.interp(common_distance, x_vals, y_vals)
                 result[col] = interp_vals.tolist()

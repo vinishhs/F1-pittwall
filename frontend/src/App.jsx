@@ -160,8 +160,8 @@ export default function App() {
                   {/* Left Column: Charts (75%) */}
                   <div className="col-span-3 flex flex-col gap-4 min-h-0">
                     {/* Telemetry Stack */}
-                    <div className="flex-1 bg-slate-900/50 rounded-lg border border-slate-800 p-1 backdrop-blur-sm relative">
-                      <TelemetryCharts data={telemetryData} onHover={handleHover} />
+                    <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-1 backdrop-blur-sm relative">
+                      <TelemetryCharts data={telemetryData} onHover={handleHover} hoverIndex={hoverIndex} />
                     </div>
 
                     {/* Sector Dominance Chart (New Phase 7) */}
