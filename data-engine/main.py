@@ -218,6 +218,56 @@ async def get_stints(
     print(f"--- STINT REQUEST: {year} {race} {session} [{driver1} vs {driver2}] ---")
     stints_output = []
 
+    def calculate_pit_window(lap_times, lap_numbers, base_pace):
+        """Estimate the optimal pit window using a linear regression slope."""
+        if len(lap_times) < 3:
+            return None
+        
+        # 1. Use the last 5 valid laps to capture the most recent trend
+        recent_times = lap_times[-5:]
+        recent_laps = lap_numbers[-5:]
+        
+        if len(recent_times) < 3:
+            return None
+            
+        # 2. Linear Regression on recent laps
+        x = np.array(recent_laps)
+        y = np.array(recent_times)
+        n = len(x)
+        
+        # Denominator check
+        denom = (n * np.sum(x**2) - (np.sum(x))**2)
+        if denom == 0: return None
+        
+        m = (n * np.sum(x*y) - np.sum(x)*np.sum(y)) / denom
+        
+        # 3. Minimum Slope and Projection
+        # Even if slope is slightly negative, tires will eventually degrade.
+        # We'll use a floor of 0.05s/lap for safety if the car is currently 'improving'
+        effective_m = max(m, 0.05) if m < 0.2 else m
+            
+        last_lap = x[-1]
+        last_time = y[-1]
+        
+        win_start = None
+        win_end = None
+        
+        for i in range(1, 40):
+            curr_lap = last_lap + i
+            pred_time = last_time + (effective_m * i)
+            
+            if win_start is None and pred_time >= (base_pace + 1.5):
+                win_start = int(curr_lap)
+            if win_end is None and pred_time >= (base_pace + 3.0):
+                win_end = int(curr_lap)
+                break
+        
+        if win_start and win_end:
+            # Boundary check: Ensure window is realistic (e.g. within next 30 laps)
+            if win_start > (last_lap + 30): return None
+            return {"PitWindowStart": win_start, "PitWindowEnd": win_end}
+        return None
+
     try:
         f1_session = fastf1.get_session(year, race, session)
         f1_session.load()
@@ -267,6 +317,41 @@ async def get_stints(
                                 
                         start_life = min(tyre_life_list) if tyre_life_list else 1
                         
+                        # Phase 3: Strategy Metrics
+                        strategy_metrics = None
+                        latest_stint_id = driver_laps['Stint'].max()
+                        
+                        if str(stint_id) == str(latest_stint_id):
+                            # Only predict for the latest stint
+                            window = calculate_pit_window(lap_times, lap_numbers, base_pace)
+                            if window:
+                                # Phase 3: Dynamic Gap Analysis
+                                window["PitLoss"] = 25.0
+                                
+                                # Try to find current gap relative to the other driver
+                                try:
+                                    other_driver = driver2 if driver == driver1 else driver1
+                                    other_laps = laps.pick_driver(other_driver).dropna(subset=['Time'])
+                                    this_laps = driver_laps.dropna(subset=['Time'])
+                                    
+                                    if not other_laps.empty and not this_laps.empty:
+                                        # Use total time elapsed to find the gap at the last common lap
+                                        last_time_this = this_laps['Time'].iloc[-1].total_seconds()
+                                        last_time_other = other_laps['Time'].iloc[-1].total_seconds()
+                                        
+                                        # Gap = Other - This (Positive means this driver is ahead)
+                                        current_gap = last_time_other - last_time_this
+                                        
+                                        window["CurrentGap"] = round(current_gap, 2)
+                                        # Projected Delta = Gap - PitLoss
+                                        window["ProjectedExitDelta"] = round(current_gap - 25.0, 2)
+                                except Exception as ge:
+                                    print(f"Gap Calc Error: {ge}")
+                                    window["CurrentGap"] = 0.0
+                                    window["ProjectedExitDelta"] = -25.0
+                                    
+                                strategy_metrics = window
+                                
                         stints_output.append({
                             "Driver": driver,
                             "Stint": int(stint_id),
@@ -277,7 +362,8 @@ async def get_stints(
                             "BasePace": base_pace,
                             "LapNumbers": lap_numbers,
                             "LapTimes": lap_times,
-                            "TyreLife": tyre_life_list
+                            "TyreLife": tyre_life_list,
+                            "Strategy": strategy_metrics
                         })
             except Exception as e:
                 print(f"Standard grouping failed: {e}. Switching to Fallback.")
