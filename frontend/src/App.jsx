@@ -6,6 +6,7 @@ import TrackMap from './components/TrackMap';
 import HistoryGallery from './components/HistoryGallery';
 import SectorChart from './components/SectorChart';
 import StatsCard from './components/StatsCard'; // Added missing import
+import StrategyView from './components/StrategyView';
 import { Activity, Zap, Timer, Map, Archive, BarChart2, Layers } from 'lucide-react';
 import client from './api/client';
 
@@ -33,8 +34,8 @@ export default function App() {
     setSectorData(null);
     setHoverIndex(null);
 
-    // Keep active tab in Analysis when re-fetching
-    setActiveTab('analysis');
+    // Let UI dictate tab (so 'Strategy' fetch doesn't boot user back to 'Analysis')
+    if (activeTab === 'garage') setActiveTab('analysis');
 
     try {
       console.log("Requesting Analysis...", params);
@@ -58,9 +59,11 @@ export default function App() {
         setSectorData(sectorRes.data);
       }
 
+      setLoadedParams(params);
       setStatus('success');
     } catch (err) {
       console.error("Analysis Error:", err);
+      console.log("FETCH_CATCH_BLOCK_REACHED:", err);
       setStatus('error');
       setErrorMsg(err.response?.data?.detail || err.message || "Failed to fetch analysis");
     }
@@ -146,26 +149,9 @@ export default function App() {
             <div className="flex-1 animate-in slide-in-from-right-4 duration-300">
               <HistoryGallery onLoad={handleLoadHistory} />
             </div>
-          ) : activeTab === 'strategy' ? (
-            // --- STRATEGY VIEW (Phase 1 Placeholder) ---
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 animate-in fade-in duration-500">
-                <Layers className="w-20 h-20 mb-6 text-brand-red/50 animate-pulse" />
-                <h2 className="text-3xl font-black text-white tracking-widest uppercase mb-4 shadow-sm text-center">
-                    Tire Degradation Analysis
-                </h2>
-                <div className="flex items-center gap-3 px-6 py-3 bg-slate-900 border border-slate-700/50 rounded-lg text-slate-400 font-mono tracking-widest text-sm">
-                    <Zap className="w-5 h-5 text-cyan-400" />
-                    STATUS: [COMING SOON]
-                </div>
-                <p className="mt-8 text-center max-w-md italic opacity-80 leading-relaxed text-sm">
-                    Phase 1 Stint Pacing Logic is running locally in the Data Engine.<br/>
-                    Frontend Visualization Modules are currently locked for 2026.
-                </p>
-            </div>
           ) : (
-            // --- ANALYSIS DASHBOARD VIEW ---
             <>
-              {/* Controls Section (Top Bar) */}
+              {/* Controls Section (Top Bar) Shared across Analysis and Strategy */}
               <div className="mb-6 z-10">
                 {/* Key prop ensures re-mount when loadedParams change, resolving the sync issue */}
                 <Controls
@@ -179,37 +165,47 @@ export default function App() {
 
               {/* Main Visualization Grid */}
               {telemetryData && sectorData && status !== 'error' ? (
-                <div className="flex-1 grid grid-cols-4 gap-6 min-h-0 animate-in fade-in duration-500">
-                  {/* Left Column: Charts (75%) */}
-                  <div className="col-span-3 flex flex-col gap-4 min-h-0">
-                    {/* Telemetry Stack */}
-                    <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-1 backdrop-blur-sm relative">
-                      <TelemetryCharts data={telemetryData} onHover={handleHover} hoverIndex={hoverIndex} />
+                activeTab === 'strategy' ? (
+                  // --- STRATEGY VIEW (Phase 2) ---
+                  <StrategyView loadedParams={loadedParams} />
+                ) : (
+                  // --- ANALYSIS DASHBOARD VIEW ---
+                  <div className="flex-1 grid grid-cols-4 gap-6 min-h-0 animate-in fade-in duration-500">
+                    {/* Left Column: Charts (75%) */}
+                    <div className="col-span-3 flex flex-col gap-4 min-h-0">
+                      {/* Telemetry Stack */}
+                      <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-1 backdrop-blur-sm relative">
+                        <TelemetryCharts data={telemetryData} onHover={handleHover} hoverIndex={hoverIndex} />
+                      </div>
+
+                      {/* Sector Dominance Chart (New Phase 7) */}
+                      <div className="h-40 shrink-0">
+                        <SectorChart data={sectorData} driver1={d1Name} driver2={d2Name} />
+                      </div>
                     </div>
 
-                    {/* Sector Dominance Chart (New Phase 7) */}
-                    <div className="h-40 shrink-0">
-                      <SectorChart data={sectorData} driver1={d1Name} driver2={d2Name} />
+                    {/* Right Column: Track Map & Stats (25%) */}
+                    <div className="col-span-1 flex flex-col gap-6">
+                      {/* Track Map Card */}
+                      <div className="flex-1 min-h-[300px] flex flex-col">
+                        <TrackMap data={telemetryData} hoverIndex={hoverIndex} />
+                      </div>
+
+                      {/* Stats Card - Updated Layout */}
+                      <StatsCard sectorData={sectorData} />
                     </div>
                   </div>
-
-                  {/* Right Column: Track Map & Stats (25%) */}
-                  <div className="col-span-1 flex flex-col gap-6">
-                    {/* Track Map Card */}
-                    <div className="flex-1 min-h-[300px] flex flex-col">
-                      <TrackMap data={telemetryData} hoverIndex={hoverIndex} />
-                    </div>
-
-                    {/* Stats Card - Updated Layout */}
-                    <StatsCard sectorData={sectorData} />
-                  </div>
-                </div>
+                )
               ) : (
                 /* Empty State */
                 status !== 'loading' && (
                   <div className="flex-1 flex flex-col items-center justify-center text-slate-600 z-0">
                     <Map className="w-16 h-16 mb-4 opacity-20" />
-                    <p className="text-lg font-light">Select race parameters to initialize.</p>
+                    {status === 'error' ? (
+                        <p className="text-lg font-bold text-red-500">Analysis Failed: {errorMsg}</p>
+                    ) : (
+                        <p className="text-lg font-light">Select race parameters to initialize.</p>
+                    )}
                   </div>
                 )
               )}

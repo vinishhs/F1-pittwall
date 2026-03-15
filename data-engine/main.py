@@ -245,17 +245,39 @@ async def get_stints(
                         raise ValueError("Stint column empty")
 
                     for stint_id, stint_data in driver_laps.groupby('Stint'):
-                        compound = get_mode_compound(stint_data)
-                        start = int(stint_data['LapNumber'].min())
-                        end = int(stint_data['LapNumber'].max())
+                        valid_laps = stint_data.dropna(subset=['LapTime'])
+                        if valid_laps.empty:
+                            continue
+                            
+                        compound = get_mode_compound(valid_laps)
+                        start = int(valid_laps['LapNumber'].min())
+                        end = int(valid_laps['LapNumber'].max())
                         length = end - start + 1
+                        
+                        lap_numbers = valid_laps['LapNumber'].tolist()
+                        lap_times = [round(t, 3) for t in valid_laps['LapTime'].dt.total_seconds().tolist()]
+                        base_pace = min(lap_times) if lap_times else 0
+                        
+                        tyre_life_list = []
+                        for tl in valid_laps['TyreLife']:
+                            try:
+                                tyre_life_list.append(int(tl))
+                            except:
+                                tyre_life_list.append(1)
+                                
+                        start_life = min(tyre_life_list) if tyre_life_list else 1
                         
                         stints_output.append({
                             "Driver": driver,
+                            "Stint": int(stint_id),
                             "Compound": compound,
-                            "StintLength": length,
                             "StartLap": start,
-                            "TyreLife": int(len(stint_data))
+                            "StintLength": length,
+                            "TyreLife_Start": start_life,
+                            "BasePace": base_pace,
+                            "LapNumbers": lap_numbers,
+                            "LapTimes": lap_times,
+                            "TyreLife": tyre_life_list
                         })
             except Exception as e:
                 print(f"Standard grouping failed: {e}. Switching to Fallback.")
@@ -278,14 +300,27 @@ async def get_stints(
                     compound = get_mode_compound(driver_laps)
                 
                 # Mock Stint: Lap 1 to Last Lap
-                total_laps = int(driver_laps['LapNumber'].max())
+                valid_laps = driver_laps.dropna(subset=['LapTime'])
+                if valid_laps.empty:
+                    continue
+                    
+                total_laps = int(valid_laps['LapNumber'].max())
+                lap_numbers = valid_laps['LapNumber'].tolist()
+                lap_times = [round(t, 3) for t in valid_laps['LapTime'].dt.total_seconds().tolist()]
+                base_pace = min(lap_times) if lap_times else 0
+                tyre_life_list = [i+1 for i in range(len(valid_laps))]
                 
                 stints_output.append({
                     "Driver": driver,
+                    "Stint": 1,
                     "Compound": compound,
                     "StintLength": total_laps,
                     "StartLap": 1,
-                    "TyreLife": len(driver_laps),
+                    "TyreLife_Start": 1,
+                    "BasePace": base_pace,
+                    "LapNumbers": lap_numbers,
+                    "LapTimes": lap_times,
+                    "TyreLife": tyre_life_list,
                     "Fallback": True
                 })
 
