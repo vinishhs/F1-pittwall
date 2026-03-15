@@ -88,7 +88,7 @@ export default function App() {
   const d2Name = loadedParams?.driver2 || 'D2';
 
   return (
-    <div className="flex h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans selection:bg-brand-red selection:text-white">
+    <div className="flex min-h-screen w-full bg-slate-950 text-slate-100 font-sans selection:bg-brand-red selection:text-white">
       {/* Sidebar Area */}
       <Sidebar />
 
@@ -128,7 +128,7 @@ export default function App() {
         </header>
 
         {/* Dashboard Content Swapper */}
-        <div className="flex-1 p-6 overflow-hidden relative flex flex-col">
+        <div className="flex-1 p-6 relative flex flex-col overflow-y-auto overflow-x-hidden">
           {/* Background Grid Effect */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
             style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
